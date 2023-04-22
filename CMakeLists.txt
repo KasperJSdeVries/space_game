@@ -3,6 +3,9 @@ project(space_game)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra")
+endif()
 
 add_subdirectory(engine)
 add_subdirectory(testbed)
