@@ -9,7 +9,5 @@ int main() {
   SPACE_DEBUG("A test message: %f", 3.14f);
   SPACE_TRACE("A test message: %f", 3.14f);
 
-  SPACE_ASSERT(1 == 0);
-
   return 0;
 }

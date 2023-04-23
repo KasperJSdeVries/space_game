@@ -9,4 +9,4 @@ add_executable(space_game ${SOURCE_FILES})
 
 target_include_directories(space_game PUBLIC ${SPACE_ENGINE_INCLUDE_DIRS})
 
-target_link_libraries(space_game space_engine)
+target_link_libraries(space_game PUBLIC space_engine)

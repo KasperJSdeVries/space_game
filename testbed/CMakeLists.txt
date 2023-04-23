@@ -7,6 +7,6 @@ file(GLOB_RECURSE SOURCE_FILES src/**.c)
 
 add_executable(testbed ${SOURCE_FILES})
 
-target_include_directories(testbed PUBLIC ${SPACE_ENGINE_INCLUDE_DIRS})
+target_include_directories(testbed PUBLIC ${SPACE_ENGINE_INCLUDE_DIRS} PUBLIC ${SPACE_ENGINE_SOURCE_DIR})
 
-target_link_libraries(testbed space_engine)
+target_link_libraries(testbed PUBLIC space_engine)
