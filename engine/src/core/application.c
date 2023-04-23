@@ -1,4 +1,5 @@
 #include "core/application.h"
+#include "core/event.h"
 #include "core/logger.h"
 #include "core/space_memory.h"
 #include "game_types.h"
@@ -30,6 +31,12 @@ b8 application_create(game *game_instance) {
 
   app_state.is_running = true;
   app_state.is_suspended = false;
+
+  if (!event_initialize()) {
+    SPACE_ERROR(
+        "Event system failed initialization. Application can not continue.");
+    return false;
+  }
 
   if (!platform_startup(&app_state.platform,
                         app_state.game_instance->app_config.name,
@@ -81,6 +88,9 @@ b8 application_run() {
   app_state.is_running = false;
 
   SPACE_DEBUG("Shutting down");
+
+  event_shutdown();
+
   platform_shutdown(&app_state.platform);
 
   return true;
