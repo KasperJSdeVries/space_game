@@ -149,28 +149,26 @@ void *platform_set_memory(void *dest, i32 value, u64 size) {
   return memset(dest, value, size);
 }
 
-void platform_console_write(const char *message, u8 colour) {
+print_with_colour(const char *message, u8 colour, handle output_handle) {
   HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
   // FATAL, ERROR, WARN, INFO, DEBUG, TRACE
   static u8 levels[6] = {64, 4, 6, 2, 1, 8};
   SetConsoleTextAttribute(console_handle, levels[colour]);
-  OutputDebugStringA(message);
-  u64 length = strlen(message);
+  u64 length = strlen(message) + 1;
+  char output[length];
+  sprintf("%s\n", message);
+  OutputDebugStringA(output);
   LPDWORD number_written = 0;
-  WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length,
+  WriteConsoleA(GetStdHandle(output_handle), output, (DWORD)length,
                 number_written, 0);
 }
 
+void platform_console_write(const char *message, u8 colour) {
+  print_with_colour(message, colour, STD_OUTPUT_HANDLE);
+}
+
 void platform_console_write_error(const char *message, u8 colour) {
-  HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-  // FATAL, ERROR, WARN, INFO, DEBUG, TRACE
-  static u8 levels[6] = {64, 4, 6, 2, 1, 8};
-  SetConsoleTextAttribute(console_handle, levels[colour]);
-  OutputDebugStringA(message);
-  u64 length = strlen(message);
-  LPDWORD number_written = 0;
-  WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length,
-                number_written, 0);
+  print_with_colour(message, colour, STD_ERROR_HANDLE);
 }
 
 f64 platform_get_absolute_time() {
