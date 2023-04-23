@@ -36,7 +36,7 @@ void log_output(log_level level, const char *message, ...) {
   va_end(arg_ptr);
 
   char out_message[MESSAGE_LENGTH];
-  sprintf(out_message, "%s%s\n", level_strings[level], formatted_message);
+  sprintf(out_message, "%s%s", level_strings[level], formatted_message);
 
   // Platform-specific output.
   if (is_error) {

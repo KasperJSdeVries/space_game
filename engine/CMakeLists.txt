@@ -3,7 +3,16 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(ECM REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
 find_package(Vulkan 1.3 REQUIRED)
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+  find_package(X11 REQUIRED)
+  find_package(XCB REQUIRED)
+  find_package(X11_XCB REQUIRED)
+endif()
 
 set(SPACE_ENGINE_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -22,4 +31,17 @@ target_include_directories(
   PRIVATE src
   PRIVATE ${VULKAN_INCLUDE_DIRS})
 
+if(LINUX)
+  target_include_directories(
+    space_engine
+    PRIVATE ${X11_INCLUDE_DIR}
+    PRIVATE ${XCB_INCLUDE_DIR}
+    PRIVATE ${X11_XCB_INCLUDE_DIR})
+endif()
+
 target_link_libraries(space_engine ${VULKAN_LIB_LIST})
+
+if(LINUX)
+  target_link_libraries(space_engine ${X11_LIBRARIES} ${XCB_LIBRARIES}
+                        ${X11_XCB_LIBRARIES})
+endif()
