@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(SOURCE_FILES src/main.c)
+file(GLOB_RECURSE SOURCE_FILES src/**.c)
 
 add_executable(testbed ${SOURCE_FILES})
 

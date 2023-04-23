@@ -16,7 +16,7 @@
 
 SPACE_API void report_assertion_failure(const char *expression,
                                         const char *message, const char *file,
-                                        int32_t line);
+                                        i32 line);
 
 #define SPACE_ASSERT(expr)                                                     \
   {                                                                            \

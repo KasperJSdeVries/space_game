@@ -21,7 +21,7 @@ typedef enum log_level {
   LOG_LEVEL_TRACE = 5,
 } log_level;
 
-b8_t logging_initialize();
+b8 logging_initialize();
 void logging_shutdown();
 
 SPACE_API void log_output(log_level level, const char *message, ...);

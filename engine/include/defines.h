@@ -1,17 +1,24 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long u64;
 
-typedef float f32_t;
-typedef double f64_t;
+typedef char i8;
+typedef short i16;
+typedef int i32;
+typedef long i64;
 
-typedef int b32_t;
-typedef _Bool b8_t;
+typedef float f32;
+typedef double f64;
+
+typedef int b32;
+typedef _Bool b8;
 
 typedef struct range {
-  uint64_t offset;
-  uint64_t size;
+  u64 offset;
+  u64 size;
 } range;
 
 #if defined(__clang__) || defined(__GNUC__)
@@ -23,8 +30,21 @@ typedef struct range {
 #define true 1
 #define false 0
 
-STATIC_ASSERT(sizeof(f32_t) == 4, "Expected f32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(f64_t) == 8, "Expected f64 to be 8 bytes.");
+STATIC_ASSERT(sizeof(u8) == 1, "Expected u8 to be 1 bytes.");
+STATIC_ASSERT(sizeof(u16) == 2, "Expected u16 to be 2 bytes.");
+STATIC_ASSERT(sizeof(u32) == 4, "Expected u32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(u64) == 8, "Expected u64 to be 8 bytes.");
+
+STATIC_ASSERT(sizeof(i8) == 1, "Expected i8 to be 1 bytes.");
+STATIC_ASSERT(sizeof(i16) == 2, "Expected i16 to be 2 bytes.");
+STATIC_ASSERT(sizeof(i32) == 4, "Expected i32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(i64) == 8, "Expected i64 to be 8 bytes.");
+
+STATIC_ASSERT(sizeof(f32) == 4, "Expected f32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
+
+STATIC_ASSERT(sizeof(b32) == 4, "Expected b32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(b8) == 1, "Expected b8 to be 1 bytes.");
 
 #define INVALID_ID_U64 18446744073709551615UL
 #define INVALID_ID 4294967295U
@@ -109,12 +129,11 @@ STATIC_ASSERT(sizeof(f64_t) == 8, "Expected f64 to be 8 bytes.");
 #define MEGABYTES(amount) ((amount)*1000ULL * 1000ULL)
 #define KILOBYTES(amount) ((amount)*1000ULL)
 
-SPACE_INLINE uint64_t get_aligned(uint64_t operand, uint64_t granularity) {
+SPACE_INLINE u64 get_aligned(u64 operand, u64 granularity) {
   return ((operand + (granularity - 1)) & ~(granularity - 1));
 }
 
-SPACE_INLINE range get_aligned_range(uint64_t offset, uint64_t size,
-                                     uint64_t granularity) {
+SPACE_INLINE range get_aligned_range(u64 offset, u64 size, u64 granularity) {
   return (range){get_aligned(offset, granularity),
                  get_aligned(size, granularity)};
 }

@@ -6,10 +6,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
-set(SOURCE_FILES src/core/logger.c)
 set(SPACE_ENGINE_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     CACHE PATH "Path to space engine include directory" FORCE)
+
+file(GLOB_RECURSE SOURCE_FILES src/**.c)
 
 add_library(space_engine SHARED ${SOURCE_FILES})
 
