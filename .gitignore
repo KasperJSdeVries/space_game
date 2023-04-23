@@ -1,2 +1,8 @@
+# Build folders
 build/
 .cache/
+cmake-build-*/
+
+# IDEs
+.idea/
+.vscode/
