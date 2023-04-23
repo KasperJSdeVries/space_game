@@ -5,9 +5,11 @@
 
 #include "core/logger.h"
 
-#include <stdlib.h>
 #include <windows.h>
 #include <windowsx.h> // param input extraction
+
+#include <stdlib.h>
+#include <stdio.h>
 
 #define WINDOW_CLASS_NAME "space_window_class"
 
@@ -149,18 +151,20 @@ void *platform_set_memory(void *dest, i32 value, u64 size) {
   return memset(dest, value, size);
 }
 
-print_with_colour(const char *message, u8 colour, handle output_handle) {
+void print_with_colour(const char *message, u8 colour, DWORD output_handle) {
   HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
   // FATAL, ERROR, WARN, INFO, DEBUG, TRACE
   static u8 levels[6] = {64, 4, 6, 2, 1, 8};
   SetConsoleTextAttribute(console_handle, levels[colour]);
-  u64 length = strlen(message) + 1;
-  char output[length];
-  sprintf("%s\n", message);
+  u64 length = strlen(message) + 3;
+  char *output = platform_allocate(sizeof(char) * length, 0);
+  platform_zero_memory(output, sizeof(char) * length);
+  sprintf(output, "%s\r\n", message);
   OutputDebugStringA(output);
   LPDWORD number_written = 0;
   WriteConsoleA(GetStdHandle(output_handle), output, (DWORD)length,
                 number_written, 0);
+  platform_free(output, false);
 }
 
 void platform_console_write(const char *message, u8 colour) {

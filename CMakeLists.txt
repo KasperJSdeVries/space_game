@@ -7,6 +7,10 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra")
 endif()
 
+if(WIN32)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endif()
+
 add_subdirectory(engine)
 add_subdirectory(testbed)
 add_subdirectory(game)
