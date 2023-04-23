@@ -1,5 +1,6 @@
 #include "core/application.h"
 #include "core/logger.h"
+#include "core/space_memory.h"
 #include "game_types.h"
 #include "platform/platform.h"
 
@@ -26,14 +27,6 @@ b8 application_create(game *game_instance) {
 
   // Initialize subsystems;
   logging_initialize();
-
-  // TODO: Remove this
-  SPACE_FATAL("A test message: %f", 3.14f);
-  SPACE_ERROR("A test message: %f", 3.14f);
-  SPACE_WARN("A test message: %f", 3.14f);
-  SPACE_INFO("A test message: %f", 3.14f);
-  SPACE_DEBUG("A test message: %f", 3.14f);
-  SPACE_TRACE("A test message: %f", 3.14f);
 
   app_state.is_running = true;
   app_state.is_suspended = false;
@@ -63,6 +56,8 @@ b8 application_create(game *game_instance) {
 }
 
 b8 application_run() {
+  SPACE_INFO(get_memory_usage_string());
+
   while (app_state.is_running) {
     if (!platform_pump_messages(&app_state.platform)) {
       app_state.is_running = false;
@@ -85,6 +80,7 @@ b8 application_run() {
 
   app_state.is_running = false;
 
+  SPACE_DEBUG("Shutting down");
   platform_shutdown(&app_state.platform);
 
   return true;

@@ -1,8 +1,7 @@
 #include "game.h"
-#include <entry.h>
 
-// TODO: Remove this (see below.)
-#include <stdlib.h>
+#include <core/space_memory.h>
+#include <entry.h>
 
 b8 create_game(game *out_game) {
   out_game->app_config.start_pos_x = 100;
@@ -16,8 +15,7 @@ b8 create_game(game *out_game) {
   out_game->render = game_render;
   out_game->on_resize = game_on_resize;
 
-  // TODO: use engine provided allocation functions.
-  out_game->state = malloc(sizeof(game_state));
+  out_game->state = space_allocate(sizeof(game_state), MEMORY_TAG_GAME);
 
   return true;
 }

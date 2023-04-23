@@ -4,6 +4,7 @@
 #if SPACE_PLATFORM_WINDOWS
 
 #include "core/logger.h"
+#include "core/space_memory.h"
 
 #include <windows.h>
 #include <windowsx.h> // param input extraction
@@ -157,14 +158,12 @@ void print_with_colour(const char *message, u8 colour, DWORD output_handle) {
   static u8 levels[6] = {64, 4, 6, 2, 1, 8};
   SetConsoleTextAttribute(console_handle, levels[colour]);
   u64 length = strlen(message) + 3;
-  char *output = platform_allocate(sizeof(char) * length, false);
-  platform_zero_memory(output, sizeof(char) * length);
+  char output[32002];
   sprintf(output, "%s\r\n", message);
   OutputDebugStringA(output);
   LPDWORD number_written = 0;
   WriteConsoleA(GetStdHandle(output_handle), output, (DWORD)length,
                 number_written, 0);
-  platform_free(output, false);
 }
 
 void platform_console_write(const char *message, u8 colour) {
