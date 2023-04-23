@@ -8,8 +8,8 @@
 #include <windows.h>
 #include <windowsx.h> // param input extraction
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WINDOW_CLASS_NAME "space_window_class"
 
@@ -157,7 +157,7 @@ void print_with_colour(const char *message, u8 colour, DWORD output_handle) {
   static u8 levels[6] = {64, 4, 6, 2, 1, 8};
   SetConsoleTextAttribute(console_handle, levels[colour]);
   u64 length = strlen(message) + 3;
-  char *output = platform_allocate(sizeof(char) * length, 0);
+  char *output = platform_allocate(sizeof(char) * length, false);
   platform_zero_memory(output, sizeof(char) * length);
   sprintf(output, "%s\r\n", message);
   OutputDebugStringA(output);
