@@ -1,11 +1,11 @@
 #include "core/space_memory.h"
 
 #include "core/logger.h"
+#include "core/space_string.h"
 #include "platform/platform.h"
 
 // TODO: Custom string lib
 #include <stdio.h>
-#include <string.h>
 
 #define USAGE_STRING_BUFFER_SIZE 8000
 
@@ -89,13 +89,13 @@ char *get_memory_usage_string() {
   static i32 longest_memory_tag_string;
   if (longest_memory_tag_string == 0) {
     for (u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
-      longest_memory_tag_string =
-          SPACE_MAX(longest_memory_tag_string, strlen(memory_tag_strings[i]));
+      longest_memory_tag_string = SPACE_MAX(
+          longest_memory_tag_string, string_length(memory_tag_strings[i]));
     }
   }
 
   char buffer[USAGE_STRING_BUFFER_SIZE] = "System memory use (tagged):\n";
-  u64 offset = strlen(buffer);
+  u64 offset = string_length(buffer);
 
   for (u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
     char unit[4] = "XiB";
@@ -120,6 +120,6 @@ char *get_memory_usage_string() {
                           memory_tag_strings[i], amount, unit);
     offset += length;
   }
-  char *out_string = strdup(buffer);
+  char *out_string = string_duplicate(buffer);
   return out_string;
 }

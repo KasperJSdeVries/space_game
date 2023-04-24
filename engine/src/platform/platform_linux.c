@@ -1,5 +1,4 @@
 #include "platform/platform.h"
-#include <xcb/xproto.h>
 
 // Linux platform layer
 #if SPACE_PLATFORM_LINUX
