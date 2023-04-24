@@ -4,7 +4,6 @@
 #if SPACE_PLATFORM_WINDOWS
 
 #include "core/logger.h"
-#include "core/space_memory.h"
 
 #include <windows.h>
 #include <windowsx.h> // param input extraction

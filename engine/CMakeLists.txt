@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(ECM REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 find_package(Vulkan 1.3 REQUIRED)
 if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
+
+  find_package(ECM REQUIRED NO_MODULE)
+  set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
   find_package(X11 REQUIRED)
   find_package(XCB REQUIRED)
   find_package(X11_XCB REQUIRED)

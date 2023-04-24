@@ -39,7 +39,7 @@ SPACE_API void *_darray_insert_at(void *array, u64 index, void *value_ptr);
 
 #define darray_reserve(type, capacity) _darray_create(capacity, sizeof(type))
 
-#define darray_destroy(array) _darray_destroy(array);
+#define darray_destroy(array) _darray_destroy(array)
 
 #define darray_push(array, value)                                              \
   {                                                                            \

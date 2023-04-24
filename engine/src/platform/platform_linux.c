@@ -179,6 +179,7 @@ b8 platform_pump_messages(platform_state *platform_state) {
 
       // Window close
       if (cm->data.data32[0] == state->wm_delete_win) {
+        // TODO: Application quit event
         quit_flagged = true;
       }
     } break;
