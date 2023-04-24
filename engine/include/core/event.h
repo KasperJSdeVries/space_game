@@ -55,7 +55,7 @@ typedef enum system_event_code {
   // u16 y = data.data.u16[1];
   EVENT_CODE_MOUSE_MOVED = 0x06,
 
-  // u16 z_delta = data.data.u16[0];
+  // u16 z_delta = data.data.i8[0];
   EVENT_CODE_MOUSE_WHEEL = 0x07,
 
   // u16 width = data.data.u16[0];

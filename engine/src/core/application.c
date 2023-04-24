@@ -1,5 +1,6 @@
 #include "core/application.h"
 #include "core/event.h"
+#include "core/input.h"
 #include "core/logger.h"
 #include "core/space_memory.h"
 #include "game_types.h"
@@ -28,6 +29,7 @@ b8 application_create(game *game_instance) {
 
   // Initialize subsystems;
   logging_initialize();
+  input_initialize();
 
   app_state.is_running = true;
   app_state.is_suspended = false;
@@ -82,6 +84,11 @@ b8 application_run() {
         app_state.is_running = false;
         break;
       }
+
+      // NOTE: Input update/state copying should always be handled after any
+      // input should be recorded; I.E. before this line. As a safety, input is
+      // the last thing to be updated before this frame ends.
+      input_update(0);
     }
   }
 
@@ -90,6 +97,7 @@ b8 application_run() {
   SPACE_DEBUG("Shutting down");
 
   event_shutdown();
+  input_shutdown();
 
   platform_shutdown(&app_state.platform);
 
