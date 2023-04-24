@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
 find_package(Vulkan 1.3 REQUIRED)
 if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
@@ -31,7 +30,7 @@ target_include_directories(
   space_engine
   PUBLIC include
   PRIVATE src
-  PRIVATE ${VULKAN_INCLUDE_DIRS})
+  PRIVATE ${Vulkan_INCLUDE_DIRS})
 
 if(LINUX)
   target_include_directories(
@@ -41,7 +40,7 @@ if(LINUX)
     PRIVATE ${X11_XCB_INCLUDE_DIR})
 endif()
 
-target_link_libraries(space_engine ${VULKAN_LIB_LIST})
+target_link_libraries(space_engine ${Vulkan_LIBRARIES})
 
 if(LINUX)
   target_link_libraries(space_engine ${X11_LIBRARIES} ${XCB_LIBRARIES}

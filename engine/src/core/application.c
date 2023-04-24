@@ -5,9 +5,11 @@
 #include "core/input.h"
 #include "core/logger.h"
 #include "core/space_memory.h"
-#include "defines.h"
+
 #include "game_types.h"
 #include "platform/platform.h"
+
+#include "renderer/renderer_frontend.h"
 
 typedef struct application_state {
   game *game_instance;
@@ -64,6 +66,13 @@ b8 application_create(game *game_instance) {
     return false;
   }
 
+  // Renderer startup
+  if (!renderer_initialize(game_instance->app_config.name,
+                           &app_state.platform)) {
+    SPACE_FATAL("Failed to initialize renderer. Aborting application.");
+    return false;
+  }
+
   // Initialize the game
   if (!app_state.game_instance->initialize(app_state.game_instance)) {
     SPACE_FATAL("Game failed to initialize.");
@@ -112,6 +121,11 @@ b8 application_run() {
         break;
       }
 
+      // TODO: Render packet creation.
+      render_packet packet;
+      packet.delta_time = delta;
+      renderer_draw_frame(&packet);
+
       f64 frame_end_time = platform_get_absolute_time();
       f64 frame_elapsed_time = frame_end_time - frame_start_time;
       running_time += frame_elapsed_time;
@@ -147,6 +161,8 @@ b8 application_run() {
 
   event_shutdown();
   input_shutdown();
+
+  renderer_shutdown();
 
   platform_shutdown(&app_state.platform);
 
