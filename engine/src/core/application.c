@@ -1,8 +1,10 @@
 #include "core/application.h"
+
 #include "core/event.h"
 #include "core/input.h"
 #include "core/logger.h"
 #include "core/space_memory.h"
+#include "defines.h"
 #include "game_types.h"
 #include "platform/platform.h"
 
@@ -18,6 +20,12 @@ typedef struct application_state {
 
 static b8 initialized = false;
 static application_state app_state;
+
+// Event handlers
+b8 application_on_event(u16 code, void *sender, void *listener_instance,
+                        event_context context);
+b8 application_on_key(u16 code, void *sender, void *listener_instance,
+                      event_context context);
 
 b8 application_create(game *game_instance) {
   if (initialized) {
@@ -39,6 +47,10 @@ b8 application_create(game *game_instance) {
         "Event system failed initialization. Application can not continue.");
     return false;
   }
+
+  event_register(EVENT_CODE_APPLICATION_QUIT, 0, application_on_event);
+  event_register(EVENT_CODE_KEY_PRESSED, 0, application_on_key);
+  event_register(EVENT_CODE_KEY_RELEASED, 0, application_on_key);
 
   if (!platform_startup(&app_state.platform,
                         app_state.game_instance->app_config.name,
@@ -96,10 +108,68 @@ b8 application_run() {
 
   SPACE_DEBUG("Shutting down");
 
+  event_unregister(EVENT_CODE_APPLICATION_QUIT, 0, application_on_event);
+  event_unregister(EVENT_CODE_KEY_PRESSED, 0, application_on_key);
+  event_unregister(EVENT_CODE_KEY_RELEASED, 0, application_on_key);
+
   event_shutdown();
   input_shutdown();
 
   platform_shutdown(&app_state.platform);
 
   return true;
+}
+
+b8 application_on_event(u16 code, void *sender, void *listener_instance,
+                        event_context context) {
+  switch (code) {
+  case EVENT_CODE_APPLICATION_QUIT: {
+    SPACE_INFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
+    app_state.is_running = false;
+    return true;
+  }
+  }
+  return false;
+}
+
+b8 application_on_key(u16 code, void *sender, void *listener_instance,
+                      event_context context) {
+  switch (code) {
+  case EVENT_CODE_KEY_PRESSED: {
+    u16 key_code = context.data.u16[0];
+    switch (key_code) {
+    case KEY_ESCAPE: {
+      // NOTE: firing an event to itself, but there may be other listeners.
+      event_context data = {};
+      event_fire(EVENT_CODE_APPLICATION_QUIT, 0, data);
+
+      // Block anything else from processing this key press.
+      return true;
+    }
+
+    case KEY_A:
+      SPACE_DEBUG("Explicit - A key pressed!");
+      break;
+
+    default:
+      SPACE_DEBUG("'%c' key pressed in window.", key_code);
+      break;
+    }
+  } break;
+
+  case EVENT_CODE_KEY_RELEASED: {
+    u16 key_code = context.data.u16[0];
+    switch (key_code) {
+    case KEY_B:
+      SPACE_DEBUG("Explicit - B key released!");
+      break;
+
+    default:
+      SPACE_DEBUG("'%c' key released in window.", key_code);
+      break;
+    }
+  } break;
+  }
+
+  return false;
 }
