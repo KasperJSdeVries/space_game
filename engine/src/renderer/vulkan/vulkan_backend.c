@@ -1,5 +1,6 @@
 #include "vulkan_backend.h"
 
+#include "vulkan_device.h"
 #include "vulkan_platform.h"
 #include "vulkan_types.inl"
 
@@ -141,6 +142,18 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 
 #endif
 
+  // Surface creation
+  if (!platform_create_vulkan_surface(platform_state, &context)) {
+    SPACE_ERROR("Failed to create surface!");
+    return false;
+  }
+
+  // Device creation
+  if (!vulkan_device_create(&context)) {
+    SPACE_ERROR("Failed to create device!");
+    return false;
+  }
+
   SPACE_INFO("Vulkan renderer initialized successfully.");
 
   return true;
@@ -148,6 +161,9 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   (void)backend;
+
+  SPACE_DEBUG("Destroying Vulkan surface...");
+  vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
 
 #if defined(_DEBUG)
   SPACE_DEBUG("Destroying Vulkan debugger...");
