@@ -27,6 +27,11 @@ typedef struct vulkan_device {
   u32 transfer_queue_index;
   u32 compute_queue_index;
 
+  VkQueue graphics_queue;
+  VkQueue present_queue;
+  VkQueue transfer_queue;
+  VkQueue compute_queue;
+
   VkPhysicalDeviceProperties properties;
   VkPhysicalDeviceFeatures features;
   VkPhysicalDeviceMemoryProperties memory;

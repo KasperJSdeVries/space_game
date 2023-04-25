@@ -162,6 +162,9 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   (void)backend;
 
+  SPACE_DEBUG("Destroying Vulkan device...");
+  vulkan_device_destroy(&context);
+
   SPACE_DEBUG("Destroying Vulkan surface...");
   vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
 
