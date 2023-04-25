@@ -3,8 +3,10 @@
 // Linux platform layer
 #if SPACE_PLATFORM_LINUX
 
+#include "containers/darray.h"
 #include "core/input.h"
 #include "core/logger.h"
+#include "renderer/vulkan/vulkan_platform.h"
 
 #include <X11/XKBlib.h>
 #include <X11/Xlib-xcb.h>
@@ -32,7 +34,7 @@ typedef struct internal_state {
   xcb_atom_t wm_delete_win;
 } internal_state;
 
-keys translate_keycode(u32 x_keycode);
+keys translate_keycode(KeySym x_keycode);
 
 b8 platform_startup(platform_state *platform_state,
                     const char *application_name, i32 x, i32 y, i32 width,
@@ -87,24 +89,23 @@ b8 platform_startup(platform_state *platform_state,
   u32 value_list[] = {state->screen->black_pixel, event_values};
 
   // Create the window
-  xcb_void_cookie_t cookie =
-      xcb_create_window(state->connection,
-                        XCB_COPY_FROM_PARENT, // depth
-                        state->window,
-                        state->screen->root,           // parent
-                        x,                             // x
-                        y,                             // y
-                        width,                         // width
-                        height,                        // height
-                        0,                             // No border
-                        XCB_WINDOW_CLASS_INPUT_OUTPUT, // class
-                        state->screen->root_visual, event_mask, value_list);
+  xcb_create_window(state->connection,
+                    XCB_COPY_FROM_PARENT, // depth
+                    state->window,
+                    state->screen->root,           // parent
+                    (i16)x,                        // x
+                    (i16)y,                        // y
+                    (u16)width,                    // width
+                    (u16)height,                   // height
+                    0,                             // No border
+                    XCB_WINDOW_CLASS_INPUT_OUTPUT, // class
+                    state->screen->root_visual, event_mask, value_list);
 
   // Change the title
   xcb_change_property(state->connection, XCB_PROP_MODE_REPLACE, state->window,
                       XCB_ATOM_WM_NAME, XCB_ATOM_STRING,
                       8, // data should be viewed 8 bits at a time
-                      strlen(application_name), application_name);
+                      (u32)strlen(application_name), application_name);
 
   // Tell the server to notify when the window manager attempts to destroy the
   // window.
@@ -149,14 +150,13 @@ void platform_shutdown(platform_state *platform_state) {
 b8 platform_pump_messages(platform_state *platform_state) {
   internal_state *state = (internal_state *)platform_state->internal_state;
 
-  xcb_generic_event_t *event;
   xcb_client_message_event_t *cm;
 
   b8 quit_flagged = false;
 
   // Poll for events untill null is returned.
-  while (event != 0) {
-    event = xcb_poll_for_event(state->connection);
+  while (true) {
+    xcb_generic_event_t *event = xcb_poll_for_event(state->connection);
     if (event == 0) {
       break;
     }
@@ -235,9 +235,17 @@ b8 platform_pump_messages(platform_state *platform_state) {
   return !quit_flagged;
 }
 
-void *platform_allocate(u64 size, u64 aligned) { return malloc(size); }
+void *platform_allocate(u64 size, u64 aligned) {
+  (void)aligned;
 
-void platform_free(void *block, b8 aligned) { free(block); }
+  return malloc(size);
+}
+
+void platform_free(void *block, b8 aligned) {
+  (void)aligned;
+
+  free(block);
+}
 
 void *platform_zero_memory(void *block, u64 size) {
   return memset(block, 0, size);
@@ -269,14 +277,14 @@ void platform_console_write_error(const char *message, u8 colour) {
 f64 platform_get_absolute_time() {
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC, &now);
-  return now.tv_sec + now.tv_nsec * 0.000000001;
+  return (f64)now.tv_sec + (f64)now.tv_nsec * 0.000000001;
 }
 
 void platform_sleep(u64 ms) {
 #if _POSIX_C_SOURCE >= 199309L
   struct timespec ts;
-  ts.tv_sec = ms / 1000;
-  ts.tv_nsec = (ms % 1000) * 1000 * 1000;
+  ts.tv_sec = (i64)ms / 1000;
+  ts.tv_nsec = ((i64)ms % 1000) * 1000 * 1000;
   nanosleep(&ts, 0);
 #else
   if (ms >= 1000) {
@@ -286,7 +294,11 @@ void platform_sleep(u64 ms) {
 #endif
 }
 
-keys translate_keycode(u32 x_keycode) {
+void platform_get_required_extension_names(const char ***names_darray) {
+  darray_push(*names_darray, &"VK_KHR_xcb_surface");
+}
+
+keys translate_keycode(KeySym x_keycode) {
   switch (x_keycode) {
   case XK_BackSpace:
     return KEY_BACKSPACE;

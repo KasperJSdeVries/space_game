@@ -6,6 +6,7 @@
 #include "core/logger.h"
 #include "core/space_memory.h"
 
+#include "defines.h"
 #include "game_types.h"
 #include "platform/platform.h"
 
@@ -16,8 +17,8 @@ typedef struct application_state {
   b8 is_running;
   b8 is_suspended;
   platform_state platform;
-  i16 width;
-  i16 height;
+  u16 width;
+  u16 height;
   clock clock;
   f64 last_time;
 } application_state;
@@ -109,13 +110,15 @@ b8 application_run() {
       f64 delta = (current_time - app_state.last_time);
       f64 frame_start_time = platform_get_absolute_time();
 
-      if (!app_state.game_instance->update(app_state.game_instance, delta)) {
+      if (!app_state.game_instance->update(app_state.game_instance,
+                                           (f32)delta)) {
         SPACE_FATAL("Game update failed, shutting down.");
         app_state.is_running = false;
         break;
       }
 
-      if (!app_state.game_instance->render(app_state.game_instance, delta)) {
+      if (!app_state.game_instance->render(app_state.game_instance,
+                                           (f32)delta)) {
         SPACE_FATAL("Game render failed, shutting down.");
         app_state.is_running = false;
         break;
@@ -123,7 +126,7 @@ b8 application_run() {
 
       // TODO: Render packet creation.
       render_packet packet;
-      packet.delta_time = delta;
+      packet.delta_time = (f32)delta;
       renderer_draw_frame(&packet);
 
       f64 frame_end_time = platform_get_absolute_time();
@@ -132,7 +135,7 @@ b8 application_run() {
       f64 remaining_seconds = target_frame_seconds - frame_elapsed_time;
 
       if (remaining_seconds > 0) {
-        u64 remaining_ms = (remaining_seconds * 1000);
+        u64 remaining_ms = ((u64)remaining_seconds * 1000);
 
         b8 limit_frames = false;
         if (remaining_ms > 0 && limit_frames) {
@@ -153,8 +156,6 @@ b8 application_run() {
 
   app_state.is_running = false;
 
-  SPACE_DEBUG("Shutting down");
-
   event_unregister(EVENT_CODE_APPLICATION_QUIT, 0, application_on_event);
   event_unregister(EVENT_CODE_KEY_PRESSED, 0, application_on_key);
   event_unregister(EVENT_CODE_KEY_RELEASED, 0, application_on_key);
@@ -166,11 +167,18 @@ b8 application_run() {
 
   platform_shutdown(&app_state.platform);
 
+  SPACE_INFO("Ran for %d frames (%f seconds)", frame_count, running_time);
+  SPACE_INFO("Shut down successfully");
+
   return true;
 }
 
 b8 application_on_event(u16 code, void *sender, void *listener_instance,
                         event_context context) {
+  (void)sender;
+  (void)listener_instance;
+  (void)context;
+
   switch (code) {
   case EVENT_CODE_APPLICATION_QUIT: {
     SPACE_INFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
@@ -183,6 +191,11 @@ b8 application_on_event(u16 code, void *sender, void *listener_instance,
 
 b8 application_on_key(u16 code, void *sender, void *listener_instance,
                       event_context context) {
+
+  (void)sender;
+  (void)listener_instance;
+  (void)context;
+
   switch (code) {
   case EVENT_CODE_KEY_PRESSED: {
     u16 key_code = context.data.u16[0];

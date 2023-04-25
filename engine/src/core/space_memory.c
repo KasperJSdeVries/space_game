@@ -86,7 +86,7 @@ char *get_memory_usage_string() {
   const u64 mib = 1024 * 1024;
   const u64 kib = 1024;
 
-  static i32 longest_memory_tag_string;
+  static u64 longest_memory_tag_string;
   if (longest_memory_tag_string == 0) {
     for (u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
       longest_memory_tag_string = SPACE_MAX(
@@ -102,13 +102,13 @@ char *get_memory_usage_string() {
     f32 amount = 1.0f;
     if (stats.tagged_allocations[i] >= gib) {
       unit[0] = 'G';
-      amount = stats.tagged_allocations[i] / (f32)gib;
+      amount = (f32)stats.tagged_allocations[i] / (f32)gib;
     } else if (stats.tagged_allocations[i] >= mib) {
       unit[0] = 'M';
-      amount = stats.tagged_allocations[i] / (f32)mib;
+      amount = (f32)stats.tagged_allocations[i] / (f32)mib;
     } else if (stats.tagged_allocations[i] >= kib) {
       unit[0] = 'K';
-      amount = stats.tagged_allocations[i] / (f32)kib;
+      amount = (f32)stats.tagged_allocations[i] / (f32)kib;
     } else {
       unit[0] = 'B';
       unit[1] = '\0';
@@ -116,9 +116,9 @@ char *get_memory_usage_string() {
     }
 
     i32 length = snprintf(buffer + offset, USAGE_STRING_BUFFER_SIZE,
-                          "  %-*s: %.2f%s\n", longest_memory_tag_string,
+                          "  %-*s: %.2f%s\n", (i32)longest_memory_tag_string,
                           memory_tag_strings[i], amount, unit);
-    offset += length;
+    offset += (u64)length;
   }
   char *out_string = string_duplicate(buffer);
   return out_string;
