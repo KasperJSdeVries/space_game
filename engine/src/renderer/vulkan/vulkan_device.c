@@ -143,7 +143,8 @@ void vulkan_device_destroy(vulkan_context *context) {
   SPACE_INFO("Releasing physical device resources...");
   context->device.physical_device = 0;
 
-  vulkan_device_clear_swapchain_support_info(&context->device.swapchain_info);
+  vulkan_device_clear_swapchain_support_info(
+      &context->device.swapchain_support);
 
   context->device.graphics_queue_index = INVALID_ID;
   context->device.present_queue_index = INVALID_ID;
@@ -211,6 +212,33 @@ void vulkan_device_clear_swapchain_support_info(
                     sizeof(support_info->capabilities));
 }
 
+b8 vulkan_device_detect_depth_format(vulkan_device *device) {
+  // Format candidates
+  const u64 candidate_count = 3;
+  VkFormat candidates[] = {
+      VK_FORMAT_D32_SFLOAT,
+      VK_FORMAT_D32_SFLOAT_S8_UINT,
+      VK_FORMAT_D24_UNORM_S8_UINT,
+  };
+
+  u32 flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  for (u64 i = 0; i < candidate_count; ++i) {
+    VkFormatProperties properties;
+    vkGetPhysicalDeviceFormatProperties(device->physical_device, candidates[i],
+                                        &properties);
+
+    if ((properties.linearTilingFeatures & flags) == flags) {
+      device->depth_format = candidates[i];
+      return true;
+    } else if ((properties.optimalTilingFeatures & flags) == flags) {
+      device->depth_format = candidates[i];
+      return true;
+    }
+  }
+
+  return false;
+}
+
 b8 select_physical_device(vulkan_context *context) {
   u32 physical_device_count = 0;
   VK_CHECK(
@@ -260,7 +288,7 @@ b8 select_physical_device(vulkan_context *context) {
 
         context->device.physical_device = physical_devices[i];
 
-        context->device.swapchain_info = swapchain_info;
+        context->device.swapchain_support = swapchain_info;
 
         context->device.graphics_queue_index = queue_info.graphics_family_index;
         context->device.present_queue_index = queue_info.present_family_index;
