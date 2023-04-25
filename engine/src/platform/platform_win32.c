@@ -3,22 +3,25 @@
 // Windows platform layer.
 #if SPACE_PLATFORM_WINDOWS
 
-#include "containers/darray.h"
 #include "core/input.h"
 #include "core/logger.h"
-#include "renderer/vulkan/vulkan_platform.h"
 
+#include "containers/darray.h"
+
+#include <stdlib.h>
 #include <windows.h>
 #include <windowsx.h> // param input extraction
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "renderer/vulkan/vulkan_platform.h"
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
 
 #define WINDOW_CLASS_NAME "space_window_class"
 
 typedef struct internal_state {
   HINSTANCE h_instance;
   HWND hwnd;
+  VkSurfaceKHR surface;
 } internal_state;
 
 // Clock
@@ -186,6 +189,28 @@ void platform_sleep(u64 ms) { Sleep(ms); }
 
 void platform_get_required_extension_names(const char ***names_darray) {
   darray_push(*names_darray, &"VK_KHR_win32_surface");
+}
+
+void platform_create_vulkan_surface(platform_state *platform_state,
+                                    vulkan_context *context) {
+  internal_state *state = (internal_state *)plaplatform_state->internal_state;
+
+  VkWin32SurfaceCreateInfoKHR create_info =
+      {
+          .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+          .hinstance = state->h_instance,
+          .hwnd = state->hwnd,
+      }
+
+  VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info,
+                                            context->allocator, state->surface);
+  if (result != VK_SUCCESS) {
+    SPACE_FATAL("Vulkan surface creation failed.");
+    return false;
+  }
+
+  context->surface = state->surface;
+  return true;
 }
 
 LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
