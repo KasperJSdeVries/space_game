@@ -8,11 +8,12 @@
 
 #include "containers/darray.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
 #include <windowsx.h> // param input extraction
 
-#include "renderer/vulkan/vulkan_platform.h"
+#include "renderer/vulkan/vulkan_types.inl"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>
 
@@ -61,10 +62,10 @@ b8 platform_startup(platform_state *platform_state,
   }
 
   // Create window
-  u32 client_x = x;
-  u32 client_y = y;
-  u32 client_width = width;
-  u32 client_height = height;
+  u32 client_x = (u32)x;
+  u32 client_y = (u32)y;
+  u32 client_width = (u32)width;
+  u32 client_height = (u32)height;
 
   u32 window_x = client_x;
   u32 window_y = client_y;
@@ -83,17 +84,17 @@ b8 platform_startup(platform_state *platform_state,
   AdjustWindowRectEx(&border_rect, window_style, 0, window_ex_style);
 
   // In this case the border rectangle is negative.
-  window_x += border_rect.left;
-  window_y += border_rect.top;
+  window_x += (u32)border_rect.left;
+  window_y += (u32)border_rect.top;
 
   // Grow by the size of the OS border.
-  window_width += border_rect.right - border_rect.left;
-  window_height += border_rect.bottom - border_rect.top;
+  window_width += (u32)(border_rect.right - border_rect.left);
+  window_height += (u32)(border_rect.bottom - border_rect.top);
 
-  HWND handle =
-      CreateWindowExA(window_ex_style, WINDOW_CLASS_NAME, application_name,
-                      window_style, window_x, window_y, window_width,
-                      window_height, 0, 0, state->h_instance, 0);
+  HWND handle = CreateWindowExA(window_ex_style, WINDOW_CLASS_NAME,
+                                application_name, window_style, (i32)window_x,
+                                (i32)window_y, (i32)window_width,
+                                (i32)window_height, 0, 0, state->h_instance, 0);
 
   if (handle == 0) {
     MessageBoxA(NULL, "Window creation failed!", "Error!",
@@ -132,6 +133,8 @@ void platform_shutdown(platform_state *platform_state) {
 }
 
 b8 platform_pump_messages(platform_state *platform_state) {
+  (void)platform_state;
+
   MSG message;
   while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&message);
@@ -141,9 +144,17 @@ b8 platform_pump_messages(platform_state *platform_state) {
   return true;
 }
 
-void *platform_allocate(u64 size, u64 aligned) { return malloc(size); }
+void *platform_allocate(u64 size, u64 aligned) {
+  (void)aligned;
 
-void platform_free(void *block, b8 aligned) { free(block); }
+  return malloc(size);
+}
+
+void platform_free(void *block, b8 aligned) {
+  (void)aligned;
+
+  free(block);
+}
 
 void *platform_zero_memory(void *block, u64 size) {
   return memset(block, 0, size);
@@ -185,25 +196,24 @@ f64 platform_get_absolute_time() {
   return (f64)now_time.QuadPart * clock_frequency;
 }
 
-void platform_sleep(u64 ms) { Sleep(ms); }
+void platform_sleep(u64 ms) { Sleep((u32)ms); }
 
 void platform_get_required_extension_names(const char ***names_darray) {
   darray_push(*names_darray, &"VK_KHR_win32_surface");
 }
 
-void platform_create_vulkan_surface(platform_state *platform_state,
-                                    vulkan_context *context) {
-  internal_state *state = (internal_state *)plaplatform_state->internal_state;
+b8 platform_create_vulkan_surface(platform_state *platform_state,
+                                  vulkan_context *context) {
+  internal_state *state = (internal_state *)platform_state->internal_state;
 
-  VkWin32SurfaceCreateInfoKHR create_info =
-      {
-          .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-          .hinstance = state->h_instance,
-          .hwnd = state->hwnd,
-      }
+  VkWin32SurfaceCreateInfoKHR create_info = {
+      .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+      .hinstance = state->h_instance,
+      .hwnd = state->hwnd,
+  };
 
-  VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info,
-                                            context->allocator, state->surface);
+  VkResult result = vkCreateWin32SurfaceKHR(
+      context->instance, &create_info, context->allocator, &state->surface);
   if (result != VK_SUCCESS) {
     SPACE_FATAL("Vulkan surface creation failed.");
     return false;
@@ -230,9 +240,11 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
     // Get the updated size.
     RECT r;
     GetClientRect(hwnd, &r);
-    u32 width = r.right - r.left;
-    u32 height = r.bottom - r.top;
+    u32 width = (u32)(r.right - r.left);
+    u32 height = (u32)(r.bottom - r.top);
 
+    (void)width;
+    (void)height;
     // TODO: Fire an event for window resize.
   } break;
   case WM_KEYDOWN:
@@ -250,14 +262,14 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
     i32 x_position = GET_X_LPARAM(l_param);
     i32 y_position = GET_Y_LPARAM(l_param);
 
-    input_process_mouse_move(x_position, y_position);
+    input_process_mouse_move((i16)x_position, (i16)y_position);
   } break;
   case WM_MOUSEHWHEEL: {
     i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
     if (z_delta != 0) {
       // Flatten the input to an OS-independent(-1, 1)
       z_delta = (z_delta < 0) ? -1 : 1;
-      input_process_mouse_wheel(z_delta);
+      input_process_mouse_wheel((i8)z_delta);
     }
   } break;
   case WM_LBUTTONDOWN:
@@ -270,18 +282,23 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
                  message == WM_RBUTTONDOWN;
 
     buttons mouse_button = BUTTON_MAX_BUTTONS;
-    switch (msg) {
+    switch (message) {
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:
       mouse_button = BUTTON_LEFT;
       break;
+
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
       mouse_button = BUTTON_MIDDLE;
       break;
+
     case WM_RBUTTONDOWN:
     case WM_RBUTTONUP:
       mouse_button = BUTTON_RIGHT;
+      break;
+
+    default:
       break;
     }
 
