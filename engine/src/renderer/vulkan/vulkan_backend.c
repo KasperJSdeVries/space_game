@@ -1,5 +1,6 @@
 #include "vulkan_backend.h"
 
+#include "vulkan_command_buffer.h"
 #include "vulkan_device.h"
 #include "vulkan_platform.h"
 #include "vulkan_renderpass.h"
@@ -8,6 +9,7 @@
 
 #include "core/asserts.h"
 #include "core/logger.h"
+#include "core/space_memory.h"
 #include "core/space_string.h"
 
 #include "containers/darray.h"
@@ -22,12 +24,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
 
 i32 find_memory_index(u32 type_filter, u32 property_flags);
 
+void create_command_buffers(renderer_backend *backend);
+
 b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
                                       const char *application_name,
                                       struct platform_state *platform_state) {
-
-  (void)backend;
-  (void)platform_state;
 
   // Function pointers
   context.find_memory_index = find_memory_index;
@@ -169,6 +170,8 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
       &context, &context.main_render_pass, 0, 0, (f32)context.framebuffer_width,
       (f32)context.framebuffer_height, 0.0f, 0.0f, 0.2f, 1.0f, 1.0f, 0);
 
+  create_command_buffers(backend);
+
   SPACE_INFO("Vulkan renderer initialized successfully.");
 
   return true;
@@ -177,19 +180,29 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   (void)backend;
 
+  SPACE_INFO("Freeing command buffers...");
+  for (u32 i = 0; i < context.swapchain.image_count; ++i) {
+    if (context.graphics_command_buffers[i].handle) {
+      vulkan_command_buffer_free(&context, context.device.graphics_command_pool,
+                                 &context.graphics_command_buffers[i]);
+    }
+  }
+  darray_destroy(context.graphics_command_buffers);
+  context.graphics_command_buffers = 0;
+
   vulkan_render_pass_destroy(&context, &context.main_render_pass);
 
-  SPACE_DEBUG("Destroying Vulkan swapchain...");
+  SPACE_INFO("Destroying Vulkan swapchain...");
   vulkan_swapchain_destroy(&context, &context.swapchain);
 
-  SPACE_DEBUG("Destroying Vulkan device...");
+  SPACE_INFO("Destroying Vulkan device...");
   vulkan_device_destroy(&context);
 
-  SPACE_DEBUG("Destroying Vulkan surface...");
+  SPACE_INFO("Destroying Vulkan surface...");
   vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
 
 #if defined(_DEBUG)
-  SPACE_DEBUG("Destroying Vulkan debugger...");
+  SPACE_INFO("Destroying Vulkan debugger...");
   if (context.debug_messenger) {
     PFN_vkDestroyDebugUtilsMessengerEXT func =
         (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
@@ -198,7 +211,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   }
 #endif
 
-  SPACE_DEBUG("Destroying Vulkan instance...");
+  SPACE_INFO("Destroying Vulkan instance...");
   vkDestroyInstance(context.instance, context.allocator);
 }
 
@@ -266,4 +279,31 @@ i32 find_memory_index(u32 type_filter, u32 property_flags) {
 
   SPACE_WARN("Unable to find suitable memory type!");
   return -1;
+}
+
+void create_command_buffers(renderer_backend *backend) {
+  (void)backend;
+
+  if (!context.graphics_command_buffers) {
+    context.graphics_command_buffers =
+        darray_reserve(vulkan_command_buffer, context.swapchain.image_count);
+    for (u32 i = 0; i < context.swapchain.image_count; ++i) {
+      space_zero_memory(&context.graphics_command_buffers[i],
+                        sizeof(vulkan_command_buffer));
+    }
+  }
+
+  for (u32 i = 0; i < context.swapchain.image_count; ++i) {
+    if (context.graphics_command_buffers[i].handle) {
+      vulkan_command_buffer_free(&context, context.device.graphics_command_pool,
+                                 &context.graphics_command_buffers[i]);
+    }
+    space_zero_memory(&context.graphics_command_buffers[i],
+                      sizeof(vulkan_command_buffer));
+    vulkan_command_buffer_allocate(&context,
+                                   context.device.graphics_command_pool, true,
+                                   &context.graphics_command_buffers[i]);
+  }
+
+  SPACE_INFO("Vulkan command buffers created.");
 }
