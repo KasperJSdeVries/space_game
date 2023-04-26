@@ -2,6 +2,7 @@
 
 #include "vulkan_device.h"
 #include "vulkan_platform.h"
+#include "vulkan_renderpass.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_types.inl"
 
@@ -164,6 +165,10 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
   vulkan_swapchain_create(&context, context.framebuffer_width,
                           context.framebuffer_height, &context.swapchain);
 
+  vulkan_render_pass_create(
+      &context, &context.main_render_pass, 0, 0, (f32)context.framebuffer_width,
+      (f32)context.framebuffer_height, 0.0f, 0.0f, 0.2f, 1.0f, 1.0f, 0);
+
   SPACE_INFO("Vulkan renderer initialized successfully.");
 
   return true;
@@ -171,6 +176,8 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   (void)backend;
+
+  vulkan_render_pass_destroy(&context, &context.main_render_pass);
 
   SPACE_DEBUG("Destroying Vulkan swapchain...");
   vulkan_swapchain_destroy(&context, &context.swapchain);
