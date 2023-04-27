@@ -9,8 +9,8 @@ void vulkan_framebuffer_create(vulkan_context *context,
                                VkImageView *attachments,
                                vulkan_framebuffer *out_framebuffer) {
   // Take a copy of the attachments, render pass, and attachment count
-  out_framebuffer->attachments =
-      space_allocate(sizeof(VkImageView), MEMORY_TAG_RENDERER);
+  out_framebuffer->attachments = space_allocate(
+      sizeof(VkImageView) * attachment_count, MEMORY_TAG_RENDERER);
   out_framebuffer->attachment_count = attachment_count;
   for (u32 i = 0; i < attachment_count; ++i) {
     out_framebuffer->attachments[i] = attachments[i];

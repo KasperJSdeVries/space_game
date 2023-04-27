@@ -281,12 +281,12 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   darray_destroy(context.graphics_command_buffers);
   context.graphics_command_buffers = 0;
 
-  vulkan_render_pass_destroy(&context, &context.main_render_pass);
-
   SPACE_INFO("Destroying framebuffers...");
   for (u32 i = 0; i < context.swapchain.image_count; ++i) {
     vulkan_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
   }
+
+  vulkan_render_pass_destroy(&context, &context.main_render_pass);
 
   SPACE_INFO("Destroying Vulkan swapchain...");
   vulkan_swapchain_destroy(&context, &context.swapchain);
