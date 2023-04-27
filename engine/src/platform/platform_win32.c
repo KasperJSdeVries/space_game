@@ -231,13 +231,16 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
     // Notify the OS that erasing the screen will be handled by the application
     // to prevent flicker.
     return 1;
+
   case WM_CLOSE:
     event_context data = {};
     event_fire(EVENT_CODE_APPLICATION_QUIT, 0, data);
     return true;
+
   case WM_DESTROY:
     PostQuitMessage(0);
     return 0;
+
   case WM_SIZE: {
     // Get the updated size.
     RECT r;
@@ -245,10 +248,12 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
     u32 width = (u32)(r.right - r.left);
     u32 height = (u32)(r.bottom - r.top);
 
-    (void)width;
-    (void)height;
-    // TODO: Fire an event for window resize.
+    event_context context;
+    context.data.u16[0] = (u16)width;
+    context.data.u16[1] = (u16)height;
+    event_fire(EVENT_CODE_RESIZED, 0, context);
   } break;
+
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
   case WM_KEYUP:
@@ -259,6 +264,7 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
 
     input_process_key(key, pressed);
   } break;
+
   case WM_MOUSEMOVE: {
     // Mouse move
     i32 x_position = GET_X_LPARAM(l_param);
@@ -266,6 +272,7 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
 
     input_process_mouse_move((i16)x_position, (i16)y_position);
   } break;
+
   case WM_MOUSEHWHEEL: {
     i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
     if (z_delta != 0) {
@@ -274,6 +281,7 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
       input_process_mouse_wheel((i8)z_delta);
     }
   } break;
+
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
@@ -308,6 +316,7 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 message, WPARAM w_param,
       input_process_button(mouse_button, pressed);
     }
   } break;
+
   default:
     break;
   }

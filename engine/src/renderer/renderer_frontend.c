@@ -39,6 +39,15 @@ b8 renderer_end_frame(f32 delta_time) {
   return result;
 }
 
+void renderer_on_resize(u16 width, u16 height) {
+  if (backend) {
+    backend->resize(backend, width, height);
+  } else {
+    SPACE_WARN("renderer backend does not exist to accept resize: %i, %i",
+               width, height);
+  }
+}
+
 b8 renderer_draw_frame(render_packet *packet) {
   // If the begin frame returned successfully, mid-frame operations may
   // continue.

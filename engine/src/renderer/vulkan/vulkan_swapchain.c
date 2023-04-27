@@ -19,7 +19,8 @@ void vulkan_swapchain_create(vulkan_context *context, u32 width, u32 height,
 
 void vulkan_swapchain_recreate(vulkan_context *context, u32 width, u32 height,
                                vulkan_swapchain *out_swapchain) {
-  create(context, width, height, true, out_swapchain);
+  destroy(context, out_swapchain);
+  create(context, width, height, false, out_swapchain);
 }
 
 void vulkan_swapchain_destroy(vulkan_context *context,
@@ -52,25 +53,26 @@ void vulkan_swapchain_present(vulkan_context *context,
                               VkQueue graphics_queue, VkQueue present_queue,
                               VkSemaphore render_complete_semaphore,
                               u32 present_image_index) {
+
   (void)graphics_queue;
 
   // Return the image to the swapchain for presentation.
-  VkPresentInfoKHR present_info = {
-      .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-      .pWaitSemaphores = &render_complete_semaphore,
-      .swapchainCount = 1,
-      .pSwapchains = &swapchain->handle,
-      .pImageIndices = &present_image_index,
-  };
-
+  VkPresentInfoKHR present_info = {.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+  present_info.waitSemaphoreCount = 1;
+  present_info.pWaitSemaphores = &render_complete_semaphore;
+  present_info.swapchainCount = 1;
+  present_info.pSwapchains = &swapchain->handle;
+  present_info.pImageIndices = &present_image_index;
+  present_info.pResults = 0;
   VkResult result = vkQueuePresentKHR(present_queue, &present_info);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    // Swapchain is out of date, suboptimal or a framebuffer resize has
+    // occurred. Trigger swapchain recreation.
     vulkan_swapchain_recreate(context, context->framebuffer_width,
                               context->framebuffer_height, swapchain);
   } else if (result != VK_SUCCESS) {
     SPACE_FATAL("Failed to present swap chain image!");
   }
-
   // Increment (and loop) the index.
   context->current_frame =
       (context->current_frame + 1) % swapchain->max_frames_in_flight;
@@ -237,6 +239,8 @@ void create(vulkan_context *context, u32 width, u32 height,
 }
 
 void destroy(vulkan_context *context, vulkan_swapchain *swapchain) {
+  vkDeviceWaitIdle(context->device.logical_device);
+
   vulkan_image_destroy(context, &swapchain->depth_attachment);
 
   for (u32 i = 0; i < swapchain->image_count; ++i) {
