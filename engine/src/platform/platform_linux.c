@@ -60,7 +60,7 @@ b8 platform_startup(platform_state *platform_state,
   state->connection = XGetXCBConnection(state->display);
 
   if (xcb_connection_has_error(state->connection)) {
-    SPACE_FATAL("Failed to connect to X server via XCB.");
+    SFATAL("Failed to connect to X server via XCB.");
     return false;
   }
 
@@ -137,7 +137,7 @@ b8 platform_startup(platform_state *platform_state,
   // Flush the stream
   i32 stream_result = xcb_flush(state->connection);
   if (stream_result <= 0) {
-    SPACE_FATAL("An error occurred when flushing the stream: %d",
+    SFATAL("An error occurred when flushing the stream: %d",
                 stream_result);
     return false;
   }
@@ -324,7 +324,7 @@ b8 platform_create_vulkan_surface(struct platform_state *platform_state,
   VkResult result = vkCreateXcbSurfaceKHR(context->instance, &create_info,
                                           context->allocator, &state->surface);
   if (result != VK_SUCCESS) {
-    SPACE_FATAL("Vulkan surface creation failed.");
+    SFATAL("Vulkan surface creation failed.");
     return false;
   }
 

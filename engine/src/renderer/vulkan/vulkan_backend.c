@@ -13,8 +13,8 @@
 #include "core/application.h"
 #include "core/asserts.h"
 #include "core/logger.h"
-#include "core/space_memory.h"
-#include "core/space_string.h"
+#include "core/smemory.h"
+#include "core/sstring.h"
 
 #include "containers/darray.h"
 
@@ -82,10 +82,10 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
   darray_push(required_extensions,
               &VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // Debug utilities
 
-  SPACE_DEBUG("Required extensions:");
+  SDEBUG("Required extensions:");
   u32 length = (u32)darray_length(required_extensions);
   for (u32 i = 0; i < length; ++i) {
-    SPACE_DEBUG("  %s", required_extensions[i]);
+    SDEBUG("  %s", required_extensions[i]);
   }
 #endif
 
@@ -97,7 +97,7 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
   u32 required_validation_layer_count = 0;
 
 #if defined(_DEBUG)
-  SPACE_INFO("Validation layers enabled. Enumerating...");
+  SINFO("Validation layers enabled. Enumerating...");
 
   // The list of validation layers required.
   required_validation_layers_names = darray_create(const char *);
@@ -115,25 +115,24 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 
   // Verify all required layers are available
   for (u32 i = 0; i < required_validation_layer_count; i++) {
-    SPACE_INFO("Searching for layer: %s...",
-               required_validation_layers_names[i]);
+    SINFO("Searching for layer: %s...", required_validation_layers_names[i]);
     b8 found = false;
     for (u32 j = 0; j < available_layer_count; ++j) {
       if (string_equal(required_validation_layers_names[i],
                        available_layers[j].layerName)) {
         found = true;
-        SPACE_INFO("  Found.");
+        SINFO("  Found.");
         break;
       }
     }
 
     if (!found) {
-      SPACE_FATAL("Required validation layer is missing: %s",
-                  required_validation_layers_names[i]);
+      SFATAL("Required validation layer is missing: %s",
+             required_validation_layers_names[i]);
       return false;
     }
   }
-  SPACE_INFO("All required validation layers present.");
+  SINFO("All required validation layers present.");
 #endif
 
   create_info.enabledLayerCount = required_validation_layer_count;
@@ -141,11 +140,11 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 
   VK_CHECK(
       vkCreateInstance(&create_info, context.allocator, &context.instance));
-  SPACE_INFO("Vulkan instance created.");
+  SINFO("Vulkan instance created.");
 
 // Debugger
 #if defined(_DEBUG)
-  SPACE_DEBUG("Creating Vulkan Debugger...");
+  SDEBUG("Creating Vulkan Debugger...");
   u32 log_severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
                      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
@@ -167,19 +166,19 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
   SPACE_ASSERT_MESSAGE(func, "Failed to create debug messenger!");
   VK_CHECK(func(context.instance, &debug_create_info, context.allocator,
                 &context.debug_messenger));
-  SPACE_DEBUG("Vulkan Debugger created.");
+  SDEBUG("Vulkan Debugger created.");
 
 #endif
 
   // Surface creation
   if (!platform_create_vulkan_surface(platform_state, &context)) {
-    SPACE_ERROR("Failed to create surface!");
+    SERROR("Failed to create surface!");
     return false;
   }
 
   // Device creation
   if (!vulkan_device_create(&context)) {
-    SPACE_ERROR("Failed to create device!");
+    SERROR("Failed to create device!");
     return false;
   }
 
@@ -233,7 +232,7 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
   for (u32 i = 0; i < context.swapchain.image_count; ++i) {
     context.images_in_flight[i] = 0;
   }
-  SPACE_INFO("Vulkan renderer initialized successfully.");
+  SINFO("Vulkan renderer initialized successfully.");
 
   return true;
 }
@@ -243,7 +242,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 
   vkDeviceWaitIdle(context.device.logical_device);
 
-  SPACE_INFO("Destroying sync objects...");
+  SINFO("Destroying sync objects...");
   for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
     if (context.image_available_semaphores[i]) {
       vkDestroySemaphore(context.device.logical_device,
@@ -271,7 +270,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   darray_destroy(context.images_in_flight);
   context.images_in_flight = 0;
 
-  SPACE_INFO("Freeing command buffers...");
+  SINFO("Freeing command buffers...");
   for (u32 i = 0; i < context.swapchain.image_count; ++i) {
     if (context.graphics_command_buffers[i].handle) {
       vulkan_command_buffer_free(&context, context.device.graphics_command_pool,
@@ -281,24 +280,24 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   darray_destroy(context.graphics_command_buffers);
   context.graphics_command_buffers = 0;
 
-  SPACE_INFO("Destroying framebuffers...");
+  SINFO("Destroying framebuffers...");
   for (u32 i = 0; i < context.swapchain.image_count; ++i) {
     vulkan_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
   }
 
   vulkan_render_pass_destroy(&context, &context.main_render_pass);
 
-  SPACE_INFO("Destroying Vulkan swapchain...");
+  SINFO("Destroying Vulkan swapchain...");
   vulkan_swapchain_destroy(&context, &context.swapchain);
 
-  SPACE_INFO("Destroying Vulkan device...");
+  SINFO("Destroying Vulkan device...");
   vulkan_device_destroy(&context);
 
-  SPACE_INFO("Destroying Vulkan surface...");
+  SINFO("Destroying Vulkan surface...");
   vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
 
 #if defined(_DEBUG)
-  SPACE_INFO("Destroying Vulkan debugger...");
+  SINFO("Destroying Vulkan debugger...");
   if (context.debug_messenger) {
     PFN_vkDestroyDebugUtilsMessengerEXT func =
         (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
@@ -307,7 +306,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
   }
 #endif
 
-  SPACE_INFO("Destroying Vulkan instance...");
+  SINFO("Destroying Vulkan instance...");
   vkDestroyInstance(context.instance, context.allocator);
 }
 
@@ -319,8 +318,8 @@ void vulkan_renderer_backend_on_resize(renderer_backend *backend, u16 width,
   cached_framebuffer_height = height;
   context.framebuffer_size_generation++;
 
-  SPACE_DEBUG("Vulkan renderer backend -> resized: w/h/gen: %i/%i/%llu", width,
-              height, context.framebuffer_size_generation);
+  SDEBUG("Vulkan renderer backend -> resized: w/h/gen: %i/%i/%llu", width,
+         height, context.framebuffer_size_generation);
 }
 
 b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend,
@@ -333,12 +332,12 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend,
   if (context.recreating_swapchain) {
     VkResult result = vkDeviceWaitIdle(device->logical_device);
     if (!vulkan_result_is_success(result)) {
-      SPACE_ERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) "
-                  "failed: '%s'",
-                  vulkan_result_string(result, true));
+      SERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) "
+             "failed: '%s'",
+             vulkan_result_string(result, true));
       return false;
     }
-    SPACE_INFO("Recreating swapchain, booting.");
+    SINFO("Recreating swapchain, booting.");
     return false;
   }
 
@@ -348,9 +347,9 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend,
       context.framebuffer_size_last_generation) {
     VkResult result = vkDeviceWaitIdle(device->logical_device);
     if (!vulkan_result_is_success(result)) {
-      SPACE_ERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) "
-                  "failed: '%s'",
-                  vulkan_result_string(result, true));
+      SERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) "
+             "failed: '%s'",
+             vulkan_result_string(result, true));
       return false;
     }
 
@@ -358,7 +357,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend,
       return false;
     }
 
-    SPACE_INFO("Resized, booting.");
+    SINFO("Resized, booting.");
     return false;
   }
 
@@ -367,7 +366,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend,
   if (!vulkan_fence_wait(&context,
                          &context.in_flight_fences[context.current_frame],
                          UINT64_MAX)) {
-    SPACE_WARN("In-flight fence wait failure!");
+    SWARN("In-flight fence wait failure!");
     return false;
   }
 
@@ -482,8 +481,8 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend,
       vkQueueSubmit(context.device.graphics_queue, 1, &submit_info,
                     context.in_flight_fences[context.current_frame].handle);
   if (result != VK_SUCCESS) {
-    SPACE_ERROR("vkQueueSubmit failed with result: %s",
-                vulkan_result_string(result, true));
+    SERROR("vkQueueSubmit failed with result: %s",
+           vulkan_result_string(result, true));
     return false;
   }
 
@@ -510,16 +509,16 @@ vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
   switch (message_severity) {
   default:
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    SPACE_ERROR(callback_data->pMessage);
+    SERROR(callback_data->pMessage);
     break;
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    SPACE_WARN(callback_data->pMessage);
+    SWARN(callback_data->pMessage);
     break;
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    SPACE_INFO(callback_data->pMessage);
+    SINFO(callback_data->pMessage);
     break;
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    SPACE_TRACE(callback_data->pMessage);
+    STRACE(callback_data->pMessage);
     break;
   }
   return VK_FALSE;
@@ -538,7 +537,7 @@ i32 find_memory_index(u32 type_filter, u32 property_flags) {
     }
   }
 
-  SPACE_WARN("Unable to find suitable memory type!");
+  SWARN("Unable to find suitable memory type!");
   return -1;
 }
 
@@ -549,8 +548,8 @@ void create_command_buffers(renderer_backend *backend) {
     context.graphics_command_buffers =
         darray_reserve(vulkan_command_buffer, context.swapchain.image_count);
     for (u32 i = 0; i < context.swapchain.image_count; ++i) {
-      space_zero_memory(&context.graphics_command_buffers[i],
-                        sizeof(vulkan_command_buffer));
+      szero_memory(&context.graphics_command_buffers[i],
+                   sizeof(vulkan_command_buffer));
     }
   }
 
@@ -559,14 +558,14 @@ void create_command_buffers(renderer_backend *backend) {
       vulkan_command_buffer_free(&context, context.device.graphics_command_pool,
                                  &context.graphics_command_buffers[i]);
     }
-    space_zero_memory(&context.graphics_command_buffers[i],
-                      sizeof(vulkan_command_buffer));
+    szero_memory(&context.graphics_command_buffers[i],
+                 sizeof(vulkan_command_buffer));
     vulkan_command_buffer_allocate(&context,
                                    context.device.graphics_command_pool, true,
                                    &context.graphics_command_buffers[i]);
   }
 
-  SPACE_INFO("Vulkan command buffers created.");
+  SINFO("Vulkan command buffers created.");
 }
 
 void regenerate_framebuffers(renderer_backend *backend,
@@ -590,13 +589,13 @@ void regenerate_framebuffers(renderer_backend *backend,
 
 b8 recreate_swapchain(renderer_backend *backend) {
   if (context.recreating_swapchain) {
-    SPACE_DEBUG("recreate_swapchain called when already recreating. Booting.");
+    SDEBUG("recreate_swapchain called when already recreating. Booting.");
     return false;
   }
 
   if (context.framebuffer_width == 0 || context.framebuffer_height == 0) {
-    SPACE_DEBUG("recreate_swapchain called when window is < 1 in a dimension. "
-                "Booting.");
+    SDEBUG("recreate_swapchain called when window is < 1 in a dimension. "
+           "Booting.");
     return false;
   }
 

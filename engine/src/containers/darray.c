@@ -1,13 +1,13 @@
 #include "containers/darray.h"
 
 #include "core/logger.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 void *_darray_create(u64 capacity, u64 stride) {
   u64 header_size = DARRAY_FIELD_LENGTH * sizeof(u64);
   u64 array_size = capacity * stride;
-  u64 *new_array = space_allocate(header_size + array_size, MEMORY_TAG_DARRAY);
-  space_set_memory(new_array, 0, header_size + array_size);
+  u64 *new_array = sallocate(header_size + array_size, MEMORY_TAG_DARRAY);
+  sset_memory(new_array, 0, header_size + array_size);
   new_array[DARRAY_CAPACITY] = capacity;
   new_array[DARRAY_LENGTH] = 0;
   new_array[DARRAY_STRIDE] = stride;
@@ -19,7 +19,7 @@ void _darray_destroy(void *array) {
   u64 header_size = DARRAY_FIELD_LENGTH * sizeof(u64);
   u64 total_size =
       header_size + header[DARRAY_CAPACITY] * header[DARRAY_STRIDE];
-  space_free(header, total_size, MEMORY_TAG_DARRAY);
+  sfree(header, total_size, MEMORY_TAG_DARRAY);
 }
 
 u64 _darray_field_get(void *array, u64 field) {
@@ -37,7 +37,7 @@ void *_darray_resize(void *array) {
   u64 stride = darray_stride(array);
   void *new_array =
       _darray_create((DARRAY_RESIZE_FACTOR * darray_capacity(array)), stride);
-  space_copy_memory(new_array, array, length * stride);
+  scopy_memory(new_array, array, length * stride);
 
   _darray_field_set(new_array, DARRAY_LENGTH, length);
   _darray_destroy(array);
@@ -53,7 +53,7 @@ void *_darray_push(void *array, const void *value_ptr) {
 
   u64 addr = (u64)array;
   addr += (length * stride);
-  space_copy_memory((void *)addr, value_ptr, stride);
+  scopy_memory((void *)addr, value_ptr, stride);
   _darray_field_set(array, DARRAY_LENGTH, length + 1);
   return array;
 }
@@ -63,7 +63,7 @@ void _darray_pop(void *array, void *dest) {
   u64 stride = darray_stride(array);
   u64 addr = (u64)array;
   addr += ((length - 1) * stride);
-  space_copy_memory(dest, (void *)addr, stride);
+  scopy_memory(dest, (void *)addr, stride);
   _darray_field_set(array, DARRAY_LENGTH, length - 1);
 }
 
@@ -71,19 +71,19 @@ void *_darray_pop_at(void *array, u64 index, void *dest) {
   u64 length = darray_length(array);
   u64 stride = darray_stride(array);
   if (index >= length) {
-    SPACE_ERROR("Index outside the bounds of this array! Length: %d, index: %d",
-                length, index);
+    SERROR("Index outside the bounds of this array! Length: %d, index: %d",
+           length, index);
     return array;
   }
 
   u64 addr = (u64)array;
-  space_copy_memory(dest, (void *)(addr + (index * stride)), stride);
+  scopy_memory(dest, (void *)(addr + (index * stride)), stride);
 
   // If not on the last element, snip out the entry and copy the rest inward.
   if (index != length - 1) {
-    space_copy_memory((void *)(addr + (index * stride)),
-                      (void *)(addr + ((index + 1) * stride)),
-                      stride * (length - index));
+    scopy_memory((void *)(addr + (index * stride)),
+                 (void *)(addr + ((index + 1) * stride)),
+                 stride * (length - index));
   }
 
   _darray_field_set(array, DARRAY_LENGTH, length - 1);
@@ -94,8 +94,8 @@ void *_darray_insert_at(void *array, u64 index, void *value_ptr) {
   u64 length = darray_length(array);
   u64 stride = darray_stride(array);
   if (index >= length) {
-    SPACE_ERROR("Index outside the bounds of this array! Length: %d, index: %d",
-                length, index);
+    SERROR("Index outside the bounds of this array! Length: %d, index: %d",
+           length, index);
     return array;
   }
   if (length >= darray_capacity(array)) {
@@ -106,13 +106,12 @@ void *_darray_insert_at(void *array, u64 index, void *value_ptr) {
 
   // If not on the last element, copy the rest outward.
   if (index != length - 1) {
-    space_copy_memory((void *)(addr + ((index + 1) * stride)),
-                      (void *)(addr + (index * stride)),
-                      stride * (length - index));
+    scopy_memory((void *)(addr + ((index + 1) * stride)),
+                 (void *)(addr + (index * stride)), stride * (length - index));
   }
 
   // Set the value at the index
-  space_copy_memory((void *)(addr + (index * stride)), value_ptr, stride);
+  scopy_memory((void *)(addr + (index * stride)), value_ptr, stride);
 
   _darray_field_set(array, DARRAY_LENGTH, length + 1);
   return array;

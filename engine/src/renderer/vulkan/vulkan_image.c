@@ -46,7 +46,7 @@ void vulkan_image_create(vulkan_context *context, VkImageType image_type,
   i32 memory_type = context->find_memory_index(
       memory_requirements.memoryTypeBits, memory_flags);
   if (memory_type == -1) {
-    SPACE_ERROR("Required memory type not found. Image not valid.");
+    SERROR("Required memory type not found. Image not valid.");
   }
 
   // Allocate memory

@@ -101,7 +101,7 @@ b8 platform_startup(platform_state *platform_state,
     MessageBoxA(NULL, "Window creation failed!", "Error!",
                 MB_ICONEXCLAMATION | MB_OK);
 
-    SPACE_FATAL("Window creation failed!");
+    SFATAL("Window creation failed!");
     return false;
   } else {
     state->hwnd = handle;
@@ -216,7 +216,7 @@ b8 platform_create_vulkan_surface(platform_state *platform_state,
   VkResult result = vkCreateWin32SurfaceKHR(
       context->instance, &create_info, context->allocator, &state->surface);
   if (result != VK_SUCCESS) {
-    SPACE_FATAL("Vulkan surface creation failed.");
+    SFATAL("Vulkan surface creation failed.");
     return false;
   }
 

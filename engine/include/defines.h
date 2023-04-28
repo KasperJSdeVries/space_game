@@ -91,34 +91,34 @@ STATIC_ASSERT(sizeof(b8) == 1, "Expected b8 to be 1 bytes.");
 
 #if SPACE_EXPORT
 #ifdef _MSC_VER
-#define SPACE_API __declspec(dllexport)
+#define SAPI __declspec(dllexport)
 #else
-#define SPACE_API __attribute__((visibility("default")))
+#define SAPI __attribute__((visibility("default")))
 #endif
 #else
 #ifdef _MSC_VER
-#define SPACE_API __declspec(dllimport)
+#define SAPI __declspec(dllimport)
 #else
-#define SPACE_API
+#define SAPI
 #endif
 #endif
 
-#define SPACE_CLAMP(value, min, max)                                           \
+#define SCLAMP(value, min, max)                                           \
   ((value <= min) ? min : (value >= max) ? max : value)
 
 // inlining
 #if defined(__clang__) || defined(__gcc__)
-#define SPACE_INLINE __attribute__((always_inline)) inline
+#define SINLINE __attribute__((always_inline)) inline
 
-#define SPACE_NOINLINE __attribute__((noinline))
+#define SNOINLINE __attribute__((noinline))
 #elif defined(_MSC_VER)
-#define SPACE_INLINE __forceinline
+#define SINLINE __forceinline
 
-#define SPACE_NOINLINE __declspec(noinline)
+#define SNOINLINE __declspec(noinline)
 #else
-#define SPACE_INLINE static inline
+#define SINLINE static inline
 
-#define SPACE_NOINLINE
+#define SNOINLINE
 #endif
 
 #define GIBIBYTES(amount) ((amount)*1024ULL * 1024ULL * 1024ULL)
@@ -129,14 +129,14 @@ STATIC_ASSERT(sizeof(b8) == 1, "Expected b8 to be 1 bytes.");
 #define MEGABYTES(amount) ((amount)*1000ULL * 1000ULL)
 #define KILOBYTES(amount) ((amount)*1000ULL)
 
-SPACE_INLINE u64 get_aligned(u64 operand, u64 granularity) {
+SINLINE u64 get_aligned(u64 operand, u64 granularity) {
   return ((operand + (granularity - 1)) & ~(granularity - 1));
 }
 
-SPACE_INLINE range get_aligned_range(u64 offset, u64 size, u64 granularity) {
+SINLINE range get_aligned_range(u64 offset, u64 size, u64 granularity) {
   return (range){get_aligned(offset, granularity),
                  get_aligned(size, granularity)};
 }
 
-#define SPACE_MIN(x, y) (x < y ? x : y)
-#define SPACE_MAX(x, y) (x > y ? x : y)
+#define SMIN(x, y) (x < y ? x : y)
+#define SMAX(x, y) (x > y ? x : y)

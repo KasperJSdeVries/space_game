@@ -5,7 +5,7 @@
 b8 game_initialize(game *game_instance) {
   (void)game_instance;
 
-  SPACE_DEBUG("Initializing game.");
+  SDEBUG("Initializing game.");
   return true;
 }
 

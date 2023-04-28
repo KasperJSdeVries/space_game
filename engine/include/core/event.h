@@ -30,11 +30,11 @@ typedef b8 (*PFN_on_event)(u16 code, void *sender, void *listener_instance,
 b8 event_initialize();
 void event_shutdown();
 
-SPACE_API b8 event_register(u16 code, void *listener, PFN_on_event on_event);
+SAPI b8 event_register(u16 code, void *listener, PFN_on_event on_event);
 
-SPACE_API b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
+SAPI b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
 
-SPACE_API b8 event_fire(u16 code, void *sender, event_context context);
+SAPI b8 event_fire(u16 code, void *sender, event_context context);
 
 typedef enum system_event_code {
   EVENT_CODE_APPLICATION_QUIT = 0x01,

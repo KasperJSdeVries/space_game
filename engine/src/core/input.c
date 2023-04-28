@@ -1,7 +1,7 @@
 #include "core/input.h"
 #include "core/event.h"
 #include "core/logger.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 typedef struct keyboard_state {
   b8 keys[KEYS_MAX_KEYS];
@@ -25,9 +25,9 @@ static b8 initialized = false;
 static input_state state = {};
 
 void input_initialize() {
-  space_zero_memory(&state, sizeof(input_state));
+  szero_memory(&state, sizeof(input_state));
   initialized = true;
-  SPACE_INFO("Input subsystem initialized.");
+  SINFO("Input subsystem initialized.");
 }
 
 void input_shutdown() {
@@ -43,10 +43,10 @@ void input_update(f64 delta_time) {
   }
 
   // Copy current states to previous states.
-  space_copy_memory(&state.keyboard_previous, &state.keyboard_current,
-                    sizeof(keyboard_state));
-  space_copy_memory(&state.mouse_previous, &state.mouse_current,
-                    sizeof(mouse_state));
+  scopy_memory(&state.keyboard_previous, &state.keyboard_current,
+               sizeof(keyboard_state));
+  scopy_memory(&state.mouse_previous, &state.mouse_current,
+               sizeof(mouse_state));
 }
 
 void input_process_key(keys key, b8 pressed) {
@@ -78,7 +78,7 @@ void input_process_button(buttons button, b8 pressed) {
 
 void input_process_mouse_move(i16 x, i16 y) {
   if (state.mouse_current.x != x || state.mouse_current.y != y) {
-    SPACE_TRACE("Mouse pos: (%d, %d)", x, y);
+    STRACE("Mouse pos: (%d, %d)", x, y);
 
     state.mouse_current.x = x;
     state.mouse_current.y = y;

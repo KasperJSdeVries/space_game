@@ -4,7 +4,7 @@
 #include "vulkan_image.h"
 
 #include "core/logger.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 #include <stdint.h>
 
@@ -41,7 +41,7 @@ b8 vulkan_swapchain_acquire_next_image_index(
                               context->framebuffer_height, swapchain);
     return false;
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-    SPACE_FATAL("Failed to acquire swapchain image!");
+    SFATAL("Failed to acquire swapchain image!");
     return false;
   }
 
@@ -71,7 +71,7 @@ void vulkan_swapchain_present(vulkan_context *context,
     vulkan_swapchain_recreate(context, context->framebuffer_width,
                               context->framebuffer_height, swapchain);
   } else if (result != VK_SUCCESS) {
-    SPACE_FATAL("Failed to present swap chain image!");
+    SFATAL("Failed to present swap chain image!");
   }
   // Increment (and loop) the index.
   context->current_frame =
@@ -127,10 +127,9 @@ void create(vulkan_context *context, u32 width, u32 height,
       context->device.swapchain_support.capabilities.minImageExtent;
   VkExtent2D max =
       context->device.swapchain_support.capabilities.maxImageExtent;
-  swapchain_extent.width =
-      SPACE_CLAMP(swapchain_extent.width, min.width, max.width);
+  swapchain_extent.width = SCLAMP(swapchain_extent.width, min.width, max.width);
   swapchain_extent.height =
-      SPACE_CLAMP(swapchain_extent.height, min.height, max.height);
+      SCLAMP(swapchain_extent.height, min.height, max.height);
 
   u32 image_count =
       context->device.swapchain_support.capabilities.minImageCount + 1;
@@ -189,11 +188,11 @@ void create(vulkan_context *context, u32 width, u32 height,
                                    swapchain->handle, &swapchain->image_count,
                                    0));
   if (!swapchain->images) {
-    swapchain->images = (VkImage *)space_allocate(
+    swapchain->images = (VkImage *)sallocate(
         sizeof(VkImage) * swapchain->image_count, MEMORY_TAG_RENDERER);
   }
   if (!swapchain->views) {
-    swapchain->views = (VkImageView *)space_allocate(
+    swapchain->views = (VkImageView *)sallocate(
         sizeof(VkImageView) * swapchain->image_count, MEMORY_TAG_RENDERER);
   }
   VK_CHECK(vkGetSwapchainImagesKHR(context->device.logical_device,
@@ -224,7 +223,7 @@ void create(vulkan_context *context, u32 width, u32 height,
   // Depth resources
   if (!vulkan_device_detect_depth_format(&context->device)) {
     context->device.depth_format = VK_FORMAT_UNDEFINED;
-    SPACE_FATAL("Failed to find a supported format!");
+    SFATAL("Failed to find a supported format!");
   }
 
   // Create depth image and its view.
@@ -235,7 +234,7 @@ void create(vulkan_context *context, u32 width, u32 height,
                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, true,
                       VK_IMAGE_ASPECT_DEPTH_BIT, &swapchain->depth_attachment);
 
-  SPACE_INFO("Swapchain created successfully.");
+  SINFO("Swapchain created successfully.");
 }
 
 void destroy(vulkan_context *context, vulkan_swapchain *swapchain) {

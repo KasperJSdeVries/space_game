@@ -17,19 +17,19 @@ enum {
   DARRAY_FIELD_LENGTH,
 };
 
-SPACE_API void *_darray_create(u64 length, u64 stride);
-SPACE_API void _darray_destroy(void *array);
+SAPI void *_darray_create(u64 length, u64 stride);
+SAPI void _darray_destroy(void *array);
 
-SPACE_API u64 _darray_field_get(void *array, u64 field);
-SPACE_API void _darray_field_set(void *array, u64 field, u64 value);
+SAPI u64 _darray_field_get(void *array, u64 field);
+SAPI void _darray_field_set(void *array, u64 field, u64 value);
 
-SPACE_API void *_darray_resize(void *array);
+SAPI void *_darray_resize(void *array);
 
-SPACE_API void *_darray_push(void *array, const void *value_ptr);
-SPACE_API void _darray_pop(void *array, void *dest);
+SAPI void *_darray_push(void *array, const void *value_ptr);
+SAPI void _darray_pop(void *array, void *dest);
 
-SPACE_API void *_darray_pop_at(void *array, u64 index, void *dest);
-SPACE_API void *_darray_insert_at(void *array, u64 index, void *value_ptr);
+SAPI void *_darray_pop_at(void *array, u64 index, void *dest);
+SAPI void *_darray_insert_at(void *array, u64 index, void *value_ptr);
 
 #define DARRAY_DEFAULT_CAPACITY 1
 #define DARRAY_RESIZE_FACTOR 2

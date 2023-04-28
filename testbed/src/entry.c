@@ -1,6 +1,6 @@
 #include "game.h"
 
-#include <core/space_memory.h>
+#include <core/smemory.h>
 #include <entry.h>
 
 b8 create_game(game *out_game) {
@@ -15,7 +15,7 @@ b8 create_game(game *out_game) {
   out_game->render = game_render;
   out_game->on_resize = game_on_resize;
 
-  out_game->state = space_allocate(sizeof(game_state), MEMORY_TAG_GAME);
+  out_game->state = sallocate(sizeof(game_state), MEMORY_TAG_GAME);
 
   return true;
 }

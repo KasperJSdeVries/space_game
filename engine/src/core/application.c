@@ -4,7 +4,7 @@
 #include "core/event.h"
 #include "core/input.h"
 #include "core/logger.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 #include "defines.h"
 #include "game_types.h"
@@ -36,7 +36,7 @@ b8 application_on_resize(u16 code, void *sender, void *listener_instance,
 
 b8 application_create(game *game_instance) {
   if (initialized) {
-    SPACE_ERROR("application_create called more than once.");
+    SERROR("application_create called more than once.");
     return false;
   }
 
@@ -50,7 +50,7 @@ b8 application_create(game *game_instance) {
   app_state.is_suspended = false;
 
   if (!event_initialize()) {
-    SPACE_ERROR(
+    SERROR(
         "Event system failed initialization. Application can not continue.");
     return false;
   }
@@ -66,20 +66,20 @@ b8 application_create(game *game_instance) {
                         app_state.game_instance->app_config.start_pos_y,
                         app_state.game_instance->app_config.start_width,
                         app_state.game_instance->app_config.start_height)) {
-    SPACE_ERROR("Could not start-up platform");
+    SERROR("Could not start-up platform");
     return false;
   }
 
   // Renderer startup
   if (!renderer_initialize(game_instance->app_config.name,
                            &app_state.platform)) {
-    SPACE_FATAL("Failed to initialize renderer. Aborting application.");
+    SFATAL("Failed to initialize renderer. Aborting application.");
     return false;
   }
 
   // Initialize the game
   if (!app_state.game_instance->initialize(app_state.game_instance)) {
-    SPACE_FATAL("Game failed to initialize.");
+    SFATAL("Game failed to initialize.");
     return false;
   }
 
@@ -100,7 +100,7 @@ b8 application_run() {
   u16 frame_count = 0;
   f64 target_frame_seconds = 1.0f / 165;
 
-  SPACE_INFO(get_memory_usage_string());
+  SINFO(get_memory_usage_string());
 
   while (app_state.is_running) {
     if (!platform_pump_messages(&app_state.platform)) {
@@ -115,14 +115,14 @@ b8 application_run() {
 
       if (!app_state.game_instance->update(app_state.game_instance,
                                            (f32)delta)) {
-        SPACE_FATAL("Game update failed, shutting down.");
+        SFATAL("Game update failed, shutting down.");
         app_state.is_running = false;
         break;
       }
 
       if (!app_state.game_instance->render(app_state.game_instance,
                                            (f32)delta)) {
-        SPACE_FATAL("Game render failed, shutting down.");
+        SFATAL("Game render failed, shutting down.");
         app_state.is_running = false;
         break;
       }
@@ -171,8 +171,8 @@ b8 application_run() {
 
   platform_shutdown(&app_state.platform);
 
-  SPACE_INFO("Ran for %d frames (%f seconds)", frame_count, running_time);
-  SPACE_INFO("Shut down successfully");
+  SINFO("Ran for %d frames (%f seconds)", frame_count, running_time);
+  SINFO("Shut down successfully");
 
   return true;
 }
@@ -190,7 +190,7 @@ b8 application_on_event(u16 code, void *sender, void *listener_instance,
 
   switch (code) {
   case EVENT_CODE_APPLICATION_QUIT: {
-    SPACE_INFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
+    SINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
     app_state.is_running = false;
     return true;
   }
@@ -219,11 +219,11 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance,
     }
 
     case KEY_A:
-      SPACE_DEBUG("Explicit - A key pressed!");
+      SDEBUG("Explicit - A key pressed!");
       break;
 
     default:
-      SPACE_DEBUG("'%c' key pressed in window.", key_code);
+      SDEBUG("'%c' key pressed in window.", key_code);
       break;
     }
   } break;
@@ -232,11 +232,11 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance,
     u16 key_code = context.data.u16[0];
     switch (key_code) {
     case KEY_B:
-      SPACE_DEBUG("Explicit - B key released!");
+      SDEBUG("Explicit - B key released!");
       break;
 
     default:
-      SPACE_DEBUG("'%c' key released in window.", key_code);
+      SDEBUG("'%c' key released in window.", key_code);
       break;
     }
   } break;
@@ -258,15 +258,15 @@ b8 application_on_resize(u16 code, void *sender, void *listener_instance,
       app_state.width = width;
       app_state.height = height;
 
-      SPACE_DEBUG("Window resize: %i, %i", width, height);
+      SDEBUG("Window resize: %i, %i", width, height);
 
       if (width == 0 || height == 0) {
-        SPACE_INFO("Window minimized, suspending application.");
+        SINFO("Window minimized, suspending application.");
         app_state.is_suspended = true;
         return true;
       } else {
         if (app_state.is_suspended) {
-          SPACE_INFO("Window restored, resuming application.");
+          SINFO("Window restored, resuming application.");
           app_state.is_suspended = false;
         }
         app_state.game_instance->on_resize(app_state.game_instance,

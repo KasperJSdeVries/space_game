@@ -1,7 +1,7 @@
 #include "core/event.h"
 
 #include "containers/darray.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 // This should be more than enough
 #define MAX_MESSAGE_CODES 16386
@@ -28,7 +28,7 @@ b8 event_initialize() {
     return false;
   }
   is_initialized = false;
-  space_zero_memory(&state, sizeof(state));
+  szero_memory(&state, sizeof(state));
 
   is_initialized = true;
 

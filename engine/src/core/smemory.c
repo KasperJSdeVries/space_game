@@ -1,7 +1,7 @@
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 #include "core/logger.h"
-#include "core/space_string.h"
+#include "core/sstring.h"
 #include "platform/platform.h"
 
 // TODO: Custom string lib
@@ -40,10 +40,10 @@ void memory_initialize() { platform_zero_memory(&stats, sizeof(stats)); }
 
 void memory_shutdown() {}
 
-void *space_allocate(u64 size, memory_tag tag) {
+void *sallocate(u64 size, memory_tag tag) {
   if (tag == MEMORY_TAG_UNKNOWN) {
-    SPACE_WARN("space_allocate called using MEMORY_TAG_UNKNOWN. Re-class this "
-               "allocation.");
+    SWARN("sallocate called using MEMORY_TAG_UNKNOWN. Re-class this "
+          "allocation.");
   }
 
   stats.total_allocated += size;
@@ -56,10 +56,10 @@ void *space_allocate(u64 size, memory_tag tag) {
   return block;
 }
 
-void space_free(void *block, u64 size, memory_tag tag) {
+void sfree(void *block, u64 size, memory_tag tag) {
   if (tag == MEMORY_TAG_UNKNOWN) {
-    SPACE_WARN("space_free called using MEMORY_TAG_UNKNOWN. Re-class this "
-               "allocation.");
+    SWARN("sfree called using MEMORY_TAG_UNKNOWN. Re-class this "
+          "allocation.");
   }
 
   stats.total_allocated -= size;
@@ -69,15 +69,15 @@ void space_free(void *block, u64 size, memory_tag tag) {
   platform_free(block, false);
 }
 
-void *space_zero_memory(void *block, u64 size) {
+void *szero_memory(void *block, u64 size) {
   return platform_zero_memory(block, size);
 }
 
-void *space_copy_memory(void *dest, const void *source, u64 size) {
+void *scopy_memory(void *dest, const void *source, u64 size) {
   return platform_copy_memory(dest, source, size);
 }
 
-void *space_set_memory(void *block, i32 value, u64 size) {
+void *sset_memory(void *block, i32 value, u64 size) {
   return platform_set_memory(block, value, size);
 }
 
@@ -89,8 +89,8 @@ char *get_memory_usage_string() {
   static u64 longest_memory_tag_string;
   if (longest_memory_tag_string == 0) {
     for (u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
-      longest_memory_tag_string = SPACE_MAX(
-          longest_memory_tag_string, string_length(memory_tag_strings[i]));
+      longest_memory_tag_string =
+          SMAX(longest_memory_tag_string, string_length(memory_tag_strings[i]));
     }
   }
 

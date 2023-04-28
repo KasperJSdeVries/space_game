@@ -14,7 +14,7 @@
 #define debugBreak() __builtin_trap()
 #endif
 
-SPACE_API void report_assertion_failure(const char *expression,
+SAPI void report_assertion_failure(const char *expression,
                                         const char *message, const char *file,
                                         i32 line);
 

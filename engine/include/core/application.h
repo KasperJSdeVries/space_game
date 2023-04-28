@@ -14,8 +14,8 @@ typedef struct application_config {
   char *name;
 } application_config;
 
-SPACE_API b8 application_create(struct game *game_instance);
+SAPI b8 application_create(struct game *game_instance);
 
-SPACE_API b8 application_run();
+SAPI b8 application_run();
 
 void application_get_framebuffer_size(u32 *width, u32 *height);

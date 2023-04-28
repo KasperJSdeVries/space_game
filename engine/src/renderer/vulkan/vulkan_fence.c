@@ -34,23 +34,23 @@ b8 vulkan_fence_wait(vulkan_context *context, vulkan_fence *fence,
       return true;
 
     case VK_TIMEOUT:
-      SPACE_WARN("vulkan_fence_wait - Timed out");
+      SWARN("vulkan_fence_wait - Timed out");
       break;
 
     case VK_ERROR_DEVICE_LOST:
-      SPACE_ERROR("vulkan_fence_wait - VK_ERROR_DEVICE_LOST.");
+      SERROR("vulkan_fence_wait - VK_ERROR_DEVICE_LOST.");
       break;
 
     case VK_ERROR_OUT_OF_HOST_MEMORY:
-      SPACE_ERROR("vulkan_fence_wait - VK_ERROR_OUT_OF_HOST_MEMORY.");
+      SERROR("vulkan_fence_wait - VK_ERROR_OUT_OF_HOST_MEMORY.");
       break;
 
     case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-      SPACE_ERROR("vulkan_fence_wait - VK_ERROR_OUT_OF_DEVICE_MEMORY.");
+      SERROR("vulkan_fence_wait - VK_ERROR_OUT_OF_DEVICE_MEMORY.");
       break;
 
     default:
-      SPACE_ERROR("vulkan_fence_wait - An unknown error has occurred.");
+      SERROR("vulkan_fence_wait - An unknown error has occurred.");
       break;
     }
 

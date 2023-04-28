@@ -3,21 +3,21 @@
 #include "renderer_backend.h"
 
 #include "core/logger.h"
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 // Backend render context.
 static renderer_backend *backend = 0;
 
 b8 renderer_initialize(const char *application_name,
                        struct platform_state *platform_state) {
-  backend = space_allocate(sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+  backend = sallocate(sizeof(renderer_backend), MEMORY_TAG_RENDERER);
 
   // TODO: make this configurable.
   renderer_backend_create(RENDERER_BACKEND_TYPE_VULKAN, platform_state,
                           backend);
 
   if (!backend->initialize(backend, application_name, platform_state)) {
-    SPACE_FATAL("Renderer backend failed to initialize. Shutting down.");
+    SFATAL("Renderer backend failed to initialize. Shutting down.");
     return false;
   }
 
@@ -26,7 +26,7 @@ b8 renderer_initialize(const char *application_name,
 
 void renderer_shutdown() {
   backend->shutdown(backend);
-  space_free(backend, sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+  sfree(backend, sizeof(renderer_backend), MEMORY_TAG_RENDERER);
 }
 
 b8 renderer_begin_frame(f32 delta_time) {
@@ -43,8 +43,8 @@ void renderer_on_resize(u16 width, u16 height) {
   if (backend) {
     backend->resize(backend, width, height);
   } else {
-    SPACE_WARN("renderer backend does not exist to accept resize: %i, %i",
-               width, height);
+    SWARN("renderer backend does not exist to accept resize: %i, %i", width,
+          height);
   }
 }
 
@@ -58,7 +58,7 @@ b8 renderer_draw_frame(render_packet *packet) {
     b8 result = renderer_end_frame(packet->delta_time);
 
     if (!result) {
-      SPACE_ERROR("renderer_end_frame failed. Application shutting down.");
+      SERROR("renderer_end_frame failed. Application shutting down.");
       return false;
     }
   }

@@ -1,6 +1,6 @@
 #include "vulkan_renderpass.h"
 
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 void vulkan_render_pass_create(vulkan_context *context,
                                vulkan_render_pass *out_render_pass, f32 x,
@@ -137,7 +137,7 @@ void vulkan_render_pass_begin(vulkan_command_buffer *command_buffer,
                               VkFramebuffer frame_buffer) {
 
   VkClearValue clear_values[2];
-  space_zero_memory(clear_values, sizeof(VkClearValue) * 2);
+  szero_memory(clear_values, sizeof(VkClearValue) * 2);
   clear_values[0].color.float32[0] = renderpass->r;
   clear_values[0].color.float32[1] = renderpass->g;
   clear_values[0].color.float32[2] = renderpass->b;

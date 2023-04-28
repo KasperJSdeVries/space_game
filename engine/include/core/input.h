@@ -166,20 +166,20 @@ void input_shutdown();
 void input_update(f64 delta_time);
 
 // keyboard input
-SPACE_API b8 input_is_key_down(keys key);
-SPACE_API b8 input_is_key_up(keys key);
-SPACE_API b8 input_was_key_down(keys key);
-SPACE_API b8 input_was_key_up(keys key);
+SAPI b8 input_is_key_down(keys key);
+SAPI b8 input_is_key_up(keys key);
+SAPI b8 input_was_key_down(keys key);
+SAPI b8 input_was_key_up(keys key);
 
 void input_process_key(keys key, b8 pressed);
 
 // mouse input
-SPACE_API b8 input_is_button_down(buttons button);
-SPACE_API b8 input_is_button_up(buttons button);
-SPACE_API b8 input_was_button_down(buttons button);
-SPACE_API b8 input_was_button_up(buttons button);
-SPACE_API void input_get_mouse_position(i32 *x, i32 *y);
-SPACE_API void input_get_previous_mouse_position(i32 *x, i32 *y);
+SAPI b8 input_is_button_down(buttons button);
+SAPI b8 input_is_button_up(buttons button);
+SAPI b8 input_was_button_down(buttons button);
+SAPI b8 input_was_button_up(buttons button);
+SAPI void input_get_mouse_position(i32 *x, i32 *y);
+SAPI void input_get_previous_mouse_position(i32 *x, i32 *y);
 
 void input_process_button(buttons button, b8 pressed);
 void input_process_mouse_move(i16 x, i16 y);

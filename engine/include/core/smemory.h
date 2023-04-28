@@ -29,14 +29,14 @@ typedef enum memory_tag {
 void memory_initialize();
 void memory_shutdown();
 
-SPACE_API void *space_allocate(u64 size, memory_tag tag);
+SAPI void *sallocate(u64 size, memory_tag tag);
 
-SPACE_API void space_free(void *block, u64 size, memory_tag tag);
+SAPI void sfree(void *block, u64 size, memory_tag tag);
 
-SPACE_API void *space_zero_memory(void *block, u64 size);
+SAPI void *szero_memory(void *block, u64 size);
 
-SPACE_API void *space_copy_memory(void *dest, const void *source, u64 size);
+SAPI void *scopy_memory(void *dest, const void *source, u64 size);
 
-SPACE_API void *space_set_memory(void *block, i32 value, u64 size);
+SAPI void *sset_memory(void *block, i32 value, u64 size);
 
-SPACE_API char *get_memory_usage_string();
+SAPI char *get_memory_usage_string();

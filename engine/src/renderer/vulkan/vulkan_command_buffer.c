@@ -1,11 +1,11 @@
 #include "vulkan_command_buffer.h"
 
-#include "core/space_memory.h"
+#include "core/smemory.h"
 
 void vulkan_command_buffer_allocate(vulkan_context *context, VkCommandPool pool,
                                     b8 is_primary,
                                     vulkan_command_buffer *out_command_buffer) {
-  space_zero_memory(out_command_buffer, sizeof(vulkan_command_buffer));
+  szero_memory(out_command_buffer, sizeof(vulkan_command_buffer));
   out_command_buffer->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
 
   VkCommandBufferAllocateInfo allocate_info = {
