@@ -4,28 +4,16 @@
 
 void vulkan_render_pass_create(vulkan_context *context,
 							   vulkan_render_pass *out_render_pass,
-							   f32 x,
-							   f32 y,
-							   f32 w,
-							   f32 h,
-							   f32 r,
-							   f32 g,
-							   f32 b,
-							   f32 a,
+							   vec2 position,
+							   vec2 dimensions,
+							   vec4 colour,
 							   f32 depth,
 							   u32 stencil) {
-	out_render_pass->x = x;
-	out_render_pass->y = y;
-	out_render_pass->w = w;
-	out_render_pass->h = h;
-
-	out_render_pass->r = r;
-	out_render_pass->g = g;
-	out_render_pass->b = b;
-	out_render_pass->a = a;
-
-	out_render_pass->depth   = depth;
-	out_render_pass->stencil = stencil;
+	out_render_pass->position   = position;
+	out_render_pass->dimensions = dimensions;
+	out_render_pass->colour     = colour;
+	out_render_pass->depth      = depth;
+	out_render_pass->stencil    = stencil;
 
 	// Attachments
 	// TODO: make this configurable
@@ -141,10 +129,10 @@ void vulkan_render_pass_begin(vulkan_command_buffer *command_buffer,
 							  VkFramebuffer frame_buffer) {
 	VkClearValue clear_values[2];
 	szero_memory(clear_values, sizeof(VkClearValue) * 2);
-	clear_values[0].color.float32[0]     = renderpass->r;
-	clear_values[0].color.float32[1]     = renderpass->g;
-	clear_values[0].color.float32[2]     = renderpass->b;
-	clear_values[0].color.float32[3]     = renderpass->a;
+	clear_values[0].color.float32[0]     = renderpass->colour.r;
+	clear_values[0].color.float32[1]     = renderpass->colour.g;
+	clear_values[0].color.float32[2]     = renderpass->colour.b;
+	clear_values[0].color.float32[3]     = renderpass->colour.a;
 	clear_values[1].depthStencil.depth   = renderpass->depth;
 	clear_values[1].depthStencil.stencil = renderpass->stencil;
 
@@ -154,12 +142,12 @@ void vulkan_render_pass_begin(vulkan_command_buffer *command_buffer,
 		.framebuffer = frame_buffer,
 		.renderArea  = {
 			 .offset = {
-				 .x = (i32)renderpass->x,
-				 .y = (i32)renderpass->y,
+				 .x = (i32)renderpass->position.x,
+				 .y = (i32)renderpass->position.y,
             },
 			 .extent = {
-				 .width  = (u32)renderpass->w,
-				 .height = (u32)renderpass->h,
+				 .width  = (u32)renderpass->dimensions.x,
+				 .height = (u32)renderpass->dimensions.y,
             },
         },
 		.clearValueCount = 2,

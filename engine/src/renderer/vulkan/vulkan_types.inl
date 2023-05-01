@@ -2,6 +2,7 @@
 
 #include "core/asserts.h"
 #include "defines.h"
+#include "math/math_types.h"
 
 #include <vulkan/vulkan.h>
 
@@ -62,8 +63,9 @@ typedef enum vulkan_render_pass_state {
 
 typedef struct vulkan_render_pass {
 	VkRenderPass handle;
-	f32 x, y, w, h;
-	f32 r, g, b, a;
+	vec2 position;
+	vec2 dimensions;
+	vec4 colour;
 
 	f32 depth;
 	u32 stencil;
