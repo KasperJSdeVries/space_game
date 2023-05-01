@@ -5,170 +5,170 @@
 
 #include <vulkan/vulkan.h>
 
-#define VK_CHECK(expr)                                                         \
-  { SPACE_ASSERT(expr == VK_SUCCESS); }
+#define VK_CHECK(expr)                                                                                                 \
+	{ SPACE_ASSERT(expr == VK_SUCCESS); }
 
 #define OBJECT_SHADER_STAGE_COUNT 2
 
 typedef struct vulkan_swapchain_support_info {
-  VkSurfaceCapabilitiesKHR capabilities;
-  u32 format_count;
-  VkSurfaceFormatKHR *formats;
-  u32 present_mode_count;
-  VkPresentModeKHR *present_modes;
+	VkSurfaceCapabilitiesKHR capabilities;
+	u32 format_count;
+	VkSurfaceFormatKHR *formats;
+	u32 present_mode_count;
+	VkPresentModeKHR *present_modes;
 } vulkan_swapchain_support_info;
 
 typedef struct vulkan_device {
-  VkPhysicalDevice physical_device;
-  VkDevice logical_device;
+	VkPhysicalDevice physical_device;
+	VkDevice logical_device;
 
-  vulkan_swapchain_support_info swapchain_support;
+	vulkan_swapchain_support_info swapchain_support;
 
-  u32 graphics_queue_index;
-  u32 present_queue_index;
-  u32 transfer_queue_index;
-  u32 compute_queue_index;
+	u32 graphics_queue_index;
+	u32 present_queue_index;
+	u32 transfer_queue_index;
+	u32 compute_queue_index;
 
-  VkQueue graphics_queue;
-  VkQueue present_queue;
-  VkQueue transfer_queue;
-  VkQueue compute_queue;
+	VkQueue graphics_queue;
+	VkQueue present_queue;
+	VkQueue transfer_queue;
+	VkQueue compute_queue;
 
-  VkCommandPool graphics_command_pool;
+	VkCommandPool graphics_command_pool;
 
-  VkPhysicalDeviceProperties properties;
-  VkPhysicalDeviceFeatures features;
-  VkPhysicalDeviceMemoryProperties memory;
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
+	VkPhysicalDeviceMemoryProperties memory;
 
-  VkFormat depth_format;
+	VkFormat depth_format;
 } vulkan_device;
 
 typedef struct vulkan_image {
-  VkImage handle;
-  VkDeviceMemory memory;
-  VkImageView view;
-  u32 width;
-  u32 height;
+	VkImage handle;
+	VkDeviceMemory memory;
+	VkImageView view;
+	u32 width;
+	u32 height;
 } vulkan_image;
 
 typedef enum vulkan_render_pass_state {
-  RENDER_PASS_STATE_READY,
-  RENDER_PASS_STATE_RECORDING,
-  RENDER_PASS_STATE_IN_RENDER_PASS,
-  RENDER_PASS_STATE_RECORDING_ENDED,
-  RENDER_PASS_STATE_SUBMITTED,
-  RENDER_PASS_STATE_NOT_ALLOCATED,
+	RENDER_PASS_STATE_READY,
+	RENDER_PASS_STATE_RECORDING,
+	RENDER_PASS_STATE_IN_RENDER_PASS,
+	RENDER_PASS_STATE_RECORDING_ENDED,
+	RENDER_PASS_STATE_SUBMITTED,
+	RENDER_PASS_STATE_NOT_ALLOCATED,
 } vulkan_render_pass_state;
 
 typedef struct vulkan_render_pass {
-  VkRenderPass handle;
-  f32 x, y, w, h;
-  f32 r, g, b, a;
+	VkRenderPass handle;
+	f32 x, y, w, h;
+	f32 r, g, b, a;
 
-  f32 depth;
-  u32 stencil;
+	f32 depth;
+	u32 stencil;
 
-  vulkan_render_pass_state state;
+	vulkan_render_pass_state state;
 } vulkan_render_pass;
 
 typedef struct vulkan_framebuffer {
-  VkFramebuffer handle;
-  u32 attachment_count;
-  VkImageView *attachments;
-  vulkan_render_pass *render_pass;
+	VkFramebuffer handle;
+	u32 attachment_count;
+	VkImageView *attachments;
+	vulkan_render_pass *render_pass;
 } vulkan_framebuffer;
 
 typedef struct vulkan_swapchain {
-  VkSurfaceFormatKHR image_format;
-  u8 max_frames_in_flight;
-  VkSwapchainKHR handle;
-  u32 image_count;
-  VkImage *images;
-  VkImageView *views;
+	VkSurfaceFormatKHR image_format;
+	u8 max_frames_in_flight;
+	VkSwapchainKHR handle;
+	u32 image_count;
+	VkImage *images;
+	VkImageView *views;
 
-  vulkan_image depth_attachment;
+	vulkan_image depth_attachment;
 
-  // darray of framebuffers used for on-screen rendering.
-  vulkan_framebuffer *framebuffers;
+	// darray of framebuffers used for on-screen rendering.
+	vulkan_framebuffer *framebuffers;
 } vulkan_swapchain;
 
 typedef enum vulkan_command_buffer_state {
-  COMMAND_BUFFER_STATE_READY,
-  COMMAND_BUFFER_STATE_RECORDING,
-  COMMAND_BUFFER_STATE_IN_RENDER_PASS,
-  COMMAND_BUFFER_STATE_RECORDING_ENDED,
-  COMMAND_BUFFER_STATE_SUBMITTED,
-  COMMAND_BUFFER_STATE_NOT_ALLOCATED,
+	COMMAND_BUFFER_STATE_READY,
+	COMMAND_BUFFER_STATE_RECORDING,
+	COMMAND_BUFFER_STATE_IN_RENDER_PASS,
+	COMMAND_BUFFER_STATE_RECORDING_ENDED,
+	COMMAND_BUFFER_STATE_SUBMITTED,
+	COMMAND_BUFFER_STATE_NOT_ALLOCATED,
 } vulkan_command_buffer_state;
 
 typedef struct vulkan_command_buffer {
-  VkCommandBuffer handle;
+	VkCommandBuffer handle;
 
-  vulkan_command_buffer_state state;
+	vulkan_command_buffer_state state;
 } vulkan_command_buffer;
 
 typedef struct {
-  VkFence handle;
-  b8 is_signaled;
+	VkFence handle;
+	b8 is_signaled;
 } vulkan_fence;
 
 typedef struct vulkan_shader_stage {
-  VkShaderModuleCreateInfo create_info;
-  VkShaderModule handle;
-  VkPipelineShaderStageCreateInfo shader_stage_create_info;
+	VkShaderModuleCreateInfo create_info;
+	VkShaderModule handle;
+	VkPipelineShaderStageCreateInfo shader_stage_create_info;
 } vulkan_shader_stage;
 
 typedef struct vulkan_pipeline {
-  VkPipeline handle;
-  VkPipelineLayout pipeline_layout;
+	VkPipeline handle;
+	VkPipelineLayout pipeline_layout;
 } vulkan_pipeline;
 
 typedef struct vulkan_object_shader {
-  vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
+	vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
 
-  vulkan_pipeline pipeline;
+	vulkan_pipeline pipeline;
 } vulkan_object_shader;
 
 typedef struct vulkan_context {
-  u32 framebuffer_width;
-  u32 framebuffer_height;
-  u64 framebuffer_size_generation;
-  u64 framebuffer_size_last_generation;
+	u32 framebuffer_width;
+	u32 framebuffer_height;
+	u64 framebuffer_size_generation;
+	u64 framebuffer_size_last_generation;
 
-  VkInstance instance;
-  VkAllocationCallbacks *allocator;
-  VkSurfaceKHR surface;
+	VkInstance instance;
+	VkAllocationCallbacks *allocator;
+	VkSurfaceKHR surface;
 
 #if defined(_DEBUG)
-  VkDebugUtilsMessengerEXT debug_messenger;
+	VkDebugUtilsMessengerEXT debug_messenger;
 #endif
 
-  vulkan_device device;
+	vulkan_device device;
 
-  vulkan_swapchain swapchain;
-  vulkan_render_pass main_render_pass;
+	vulkan_swapchain swapchain;
+	vulkan_render_pass main_render_pass;
 
-  // darray
-  vulkan_command_buffer *graphics_command_buffers;
+	// darray
+	vulkan_command_buffer *graphics_command_buffers;
 
-  // darray
-  VkSemaphore *image_available_semaphores;
+	// darray
+	VkSemaphore *image_available_semaphores;
 
-  // darray
-  VkSemaphore *queue_complete_semaphores;
+	// darray
+	VkSemaphore *queue_complete_semaphores;
 
-  u32 in_flight_fence_count;
-  vulkan_fence *in_flight_fences;
+	u32 in_flight_fence_count;
+	vulkan_fence *in_flight_fences;
 
-  // Holds pointers to fences which exist and are owned elsewhere.
-  vulkan_fence **images_in_flight;
+	// Holds pointers to fences which exist and are owned elsewhere.
+	vulkan_fence **images_in_flight;
 
-  u32 image_index;
-  u32 current_frame;
+	u32 image_index;
+	u32 current_frame;
 
-  b8 recreating_swapchain;
+	b8 recreating_swapchain;
 
-  vulkan_object_shader object_shader;
+	vulkan_object_shader object_shader;
 
-  i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
+	i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
 } vulkan_context;

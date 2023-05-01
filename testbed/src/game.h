@@ -4,7 +4,7 @@
 #include <game_types.h>
 
 typedef struct game_state {
-  f32 delta_time;
+	f32 delta_time;
 } game_state;
 
 b8 game_initialize(game *game_instance);

@@ -3,8 +3,8 @@
 #include "defines.h"
 
 typedef struct clock {
-  f64 start_time;
-  f64 elapsed;
+	f64 start_time;
+	f64 elapsed;
 } clock;
 
 void clock_update(clock *clock);
