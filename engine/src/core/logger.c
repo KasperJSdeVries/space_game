@@ -37,9 +37,7 @@ b8 logging_initialize(u64 *memory_requirement, void *state) {
 	return true;
 }
 
-void logging_shutdown() {
-	// TODO: cleanup logging/write queued entries.
-}
+void logging_shutdown() { filesystem_close(&state_ptr->log_file_handle); }
 
 void log_output(log_level level, const char *message, ...) {
 	const char *level_strings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: "};
@@ -59,10 +57,12 @@ void log_output(log_level level, const char *message, ...) {
 
 	// Platform-specific output.
 	if (is_error) {
-		platform_console_write_error(out_message, level);
+		platform_console_write_error(out_message, (u8)level);
 	} else {
-		platform_console_write(out_message, level);
+		platform_console_write(out_message, (u8)level);
 	}
+
+	append_to_log_file(out_message);
 }
 
 void report_assertion_failure(const char *expression, const char *message, const char *file, i32 line) {
