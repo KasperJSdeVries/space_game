@@ -15,9 +15,7 @@ add_compile_options(
 
 add_compile_definitions($<$<CONFIG:DEBUG>:_DEBUG>)
 
-if (WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-endif ()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
 
 add_subdirectory(engine)
 add_subdirectory(testbed)

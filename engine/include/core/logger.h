@@ -21,7 +21,7 @@ typedef enum log_level {
 	LOG_LEVEL_TRACE = 5,
 } log_level;
 
-b8 logging_initialize();
+b8 logging_initialize(u64 *memory_requirement, void *state);
 void logging_shutdown();
 
 SAPI void log_output(log_level level, const char *message, ...);

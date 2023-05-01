@@ -1,8 +1,11 @@
 #include "core/logger.h"
+
 #include "core/asserts.h"
+#include "core/filesystem.h"
+#include "core/sstring.h"
 #include "platform/platform.h"
 
-// NOTE: temporary
+// TODO: temporary
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,8 +15,25 @@
 #define LEVEL_STRING_MAX_LENGTH 12
 #define FORMAT_STING_LENGTH MESSAGE_LENGTH - LEVEL_STRING_MAX_LENGTH
 
-b8 logging_initialize() {
-	// TODO: create log file.
+typedef struct logger_system_state {
+	file_handle log_file_handle;
+} logger_system_state;
+
+static logger_system_state *state_ptr;
+
+void append_to_log_file(const char *message);
+
+b8 logging_initialize(u64 *memory_requirement, void *state) {
+	*memory_requirement = sizeof(logger_system_state);
+	if (state == 0) { return true; }
+
+	state_ptr = state;
+
+	if (!filesystem_open("console.log", FILE_MODE_WRITE, false, &state_ptr->log_file_handle)) {
+		platform_console_write_error("ERROR: Unable to open console.log for writing.", LOG_LEVEL_ERROR);
+		return false;
+	}
+
 	return true;
 }
 
@@ -52,4 +72,14 @@ void report_assertion_failure(const char *expression, const char *message, const
 			   message,
 			   file,
 			   line);
+}
+
+void append_to_log_file(const char *message) {
+	if (state_ptr && state_ptr->log_file_handle.is_valid) {
+		u64 length  = string_length(message);
+		u64 written = 0;
+		if (!filesystem_write(&state_ptr->log_file_handle, length, message, &written)) {
+			platform_console_write_error("Error: failed to write to console.log.", LOG_LEVEL_ERROR);
+		}
+	}
 }

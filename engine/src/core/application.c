@@ -40,7 +40,8 @@ b8 application_create(game *game_instance) {
 	app_state.game_instance = game_instance;
 
 	// Initialize subsystems;
-	logging_initialize();
+	u64 logging_memory_requirement = 0;
+	logging_initialize(&logging_memory_requirement, 0);
 	input_initialize();
 
 	app_state.is_running   = true;
