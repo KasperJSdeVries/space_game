@@ -56,3 +56,8 @@ typedef union mat4_u {
 	/* alignas(16) */ f32 data[16];
 	/* alignas(16) */ vec4 rows[4];
 } mat4;
+
+typedef struct vertex_3d {
+	vec3 position;
+	vec4 colour;
+} vertex_3d;
