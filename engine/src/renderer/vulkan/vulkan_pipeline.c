@@ -19,10 +19,11 @@ b8 vulkan_graphics_pipeline_create(vulkan_context *context,
 								   b8 is_wireframe,
 								   vulkan_pipeline *out_pipeline) {
 	VkPipelineViewportStateCreateInfo viewport_state = {
-		.sType        = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-		.pViewports   = &viewport,
-		.scissorCount = 1,
-		.pScissors    = &scissor,
+		.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+		.viewportCount = 1,
+		.pViewports    = &viewport,
+		.scissorCount  = 1,
+		.pScissors     = &scissor,
 	};
 
 	VkPipelineRasterizationStateCreateInfo rasterizer_create_info = {
