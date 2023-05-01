@@ -393,8 +393,8 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 	vkCmdSetViewport(command_buffer->handle, 0, 1, &viewport);
 	vkCmdSetScissor(command_buffer->handle, 0, 1, &scissor);
 
-	context.main_render_pass.dimensions.x = (f32)context.framebuffer_width;
-	context.main_render_pass.dimensions.y = (f32)context.framebuffer_height;
+	context.main_render_pass.dimensions.w = (f32)context.framebuffer_width;
+	context.main_render_pass.dimensions.h = (f32)context.framebuffer_height;
 
 	vulkan_render_pass_begin(command_buffer,
 							 &context.main_render_pass,
@@ -585,8 +585,8 @@ b8 recreate_swapchain(renderer_backend *backend) {
 
 	context.framebuffer_width             = cached_framebuffer_width;
 	context.framebuffer_height            = cached_framebuffer_height;
-	context.main_render_pass.dimensions.x = (f32)cached_framebuffer_width;
-	context.main_render_pass.dimensions.y = (f32)cached_framebuffer_height;
+	context.main_render_pass.dimensions.w = (f32)cached_framebuffer_width;
+	context.main_render_pass.dimensions.h = (f32)cached_framebuffer_height;
 	cached_framebuffer_width              = 0;
 	cached_framebuffer_height             = 0;
 
@@ -604,8 +604,8 @@ b8 recreate_swapchain(renderer_backend *backend) {
 
 	context.main_render_pass.position.x   = 0;
 	context.main_render_pass.position.y   = 0;
-	context.main_render_pass.dimensions.x = (f32)context.framebuffer_width;
-	context.main_render_pass.dimensions.y = (f32)context.framebuffer_height;
+	context.main_render_pass.dimensions.w = (f32)context.framebuffer_width;
+	context.main_render_pass.dimensions.h = (f32)context.framebuffer_height;
 
 	regenerate_framebuffers(backend, &context.swapchain, &context.main_render_pass);
 

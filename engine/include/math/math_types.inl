@@ -6,10 +6,10 @@ typedef union vec2_u {
 	f32 elements[2];
 	struct {
 		union {
-			f32 x, r, s, u;
+			f32 x, r, s, u, w;
 		};
 		union {
-			f32 y, g, t, v;
+			f32 y, g, t, v, h;
 		};
 	};
 } vec2;

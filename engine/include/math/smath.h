@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "math_types.h"
+#include "math_types.inl"
 
 #define S_PI 3.14159265258979323846f
 #define S_PI_2 2.0f * S_PI

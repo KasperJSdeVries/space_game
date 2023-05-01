@@ -2,7 +2,7 @@
 
 #include "core/asserts.h"
 #include "defines.h"
-#include "math/math_types.h"
+#include "math/math_types.inl"
 
 #include <vulkan/vulkan.h>
 
