@@ -50,12 +50,12 @@ b8 vulkan_object_shader_create(vulkan_context *context, vulkan_object_shader *ou
 
 	VkFormat formats[] = {
 		VK_FORMAT_R32G32B32_SFLOAT,
-		VK_FORMAT_R32G32B32A32_SFLOAT,
+		VK_FORMAT_R32G32B32_SFLOAT,
 	};
 
 	u64 sizes[] = {
 		sizeof(vec3),
-		sizeof(vec4),
+		sizeof(vec3),
 	};
 
 	const u32 attribute_count = sizeof(formats) / sizeof(VkFormat);

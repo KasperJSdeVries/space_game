@@ -59,5 +59,5 @@ typedef union mat4_u {
 
 typedef struct vertex_3d {
 	vec3 position;
-	vec4 colour;
+	vec3 colour;
 } vertex_3d;

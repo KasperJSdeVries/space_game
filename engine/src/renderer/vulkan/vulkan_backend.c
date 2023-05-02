@@ -35,11 +35,20 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlag
 												 void *user_data);
 
 i32 find_memory_index(u32 type_filter, u32 property_flags);
+b8 create_buffers(vulkan_context *context);
 
 void create_command_buffers(renderer_backend *backend);
 void regenerate_framebuffers(renderer_backend *backend, vulkan_swapchain *swapchain, vulkan_render_pass *render_pass);
 b8 recreate_swapchain(renderer_backend *backend);
-b8 create_buffers(vulkan_context *context);
+
+void upload_data_range(vulkan_context *context,
+					   VkCommandPool pool,
+					   VkFence fence,
+					   VkQueue queue,
+					   vulkan_buffer *buffer,
+					   u64 offset,
+					   u64 size,
+					   void *data);
 
 b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 									  const char *application_name,
@@ -224,6 +233,57 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 	create_buffers(&context);
 
 	SINFO("Vulkan renderer initialized successfully.");
+
+	// WARN: temporary test code
+	const u32 vert_count = 4;
+	vertex_3d verts[vert_count];
+	szero_memory(verts, sizeof(vertex_3d) * vert_count);
+
+	verts[0].position.x = 0.0f;
+	verts[0].position.y = -0.5f;
+	verts[0].colour     = (vec3){.r = 1.0f, .g = 0.0f, .b = 0.0f};
+
+	verts[1].position.x = 0.5f;
+	verts[1].position.y = 0.5f;
+	verts[1].colour     = (vec3){.r = 0.0f, .g = 1.0f, .b = 0.0f};
+
+	verts[2].position.x = 0.0f;
+	verts[2].position.y = 0.5f;
+	verts[2].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
+
+	verts[3].position.x = 0.5f;
+	verts[3].position.y = -0.5f;
+	verts[3].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
+
+	const u32 index_count = 6;
+	u32 indices[index_count];
+	indices[0] = 0;
+	indices[1] = 1;
+	indices[2] = 2;
+	indices[3] = 0;
+	indices[4] = 3;
+	indices[5] = 1;
+
+	upload_data_range(&context,
+					  context.device.graphics_command_pool,
+					  0,
+					  context.device.graphics_queue,
+					  &context.object_vertex_buffer,
+					  0,
+					  sizeof(vertex_3d) * vert_count,
+					  verts);
+	upload_data_range(&context,
+					  context.device.graphics_command_pool,
+					  0,
+					  context.device.graphics_queue,
+					  &context.object_index_buffer,
+					  0,
+					  sizeof(u32) * index_count,
+					  indices);
+
+	SDEBUG("Uploaded vertex data.");
+
+	// WARN: end temporary test code
 
 	return true;
 }
@@ -410,6 +470,20 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 	vulkan_render_pass_begin(command_buffer,
 							 &context.main_render_pass,
 							 context.swapchain.framebuffers[context.image_index].handle);
+
+	// WARN: temporary test code
+
+	vulkan_object_shader_use(&context, &context.object_shader);
+
+	VkDeviceSize offsets[1];
+	offsets[0] = 0;
+	vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, (VkDeviceSize *)offsets);
+
+	vkCmdBindIndexBuffer(command_buffer->handle, context.object_index_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
+
+	// WARN: end temporary test code
 
 	return true;
 }
@@ -657,4 +731,23 @@ b8 create_buffers(vulkan_context *context) {
 	context->geometry_index_offset = 0;
 
 	return true;
+}
+
+void upload_data_range(vulkan_context *context,
+					   VkCommandPool pool,
+					   VkFence fence,
+					   VkQueue queue,
+					   vulkan_buffer *buffer,
+					   u64 offset,
+					   u64 size,
+					   void *data) {
+	VkBufferUsageFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	vulkan_buffer staging;
+	vulkan_buffer_create(context, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, flags, true, &staging);
+
+	vulkan_buffer_load_data(context, &staging, 0, size, 0, data);
+
+	vulkan_buffer_copy_to(context, pool, fence, queue, staging.handle, 0, buffer->handle, offset, size);
+
+	vulkan_buffer_destroy(context, &staging);
 }
