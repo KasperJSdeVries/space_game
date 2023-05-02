@@ -1,5 +1,6 @@
 #include "vulkan_backend.h"
 
+#include "vulkan_buffer.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_device.h"
 #include "vulkan_fence.h"
@@ -16,10 +17,11 @@
 #include "core/smemory.h"
 #include "core/sstring.h"
 
+#include "math/smath.h"
+
 #include "containers/darray.h"
 
 // Shaders
-#include "math/smath.h"
 #include "shaders/vulkan_object_shader.h"
 
 // Static Vulkan context
@@ -37,6 +39,7 @@ i32 find_memory_index(u32 type_filter, u32 property_flags);
 void create_command_buffers(renderer_backend *backend);
 void regenerate_framebuffers(renderer_backend *backend, vulkan_swapchain *swapchain, vulkan_render_pass *render_pass);
 b8 recreate_swapchain(renderer_backend *backend);
+b8 create_buffers(vulkan_context *context);
 
 b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 									  const char *application_name,
@@ -144,8 +147,8 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 		.pUserData       = 0,
 	};
 
-	PFN_vkCreateDebugUtilsMessengerEXT func
-		= (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+	PFN_vkCreateDebugUtilsMessengerEXT func =
+		(PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
 	SPACE_ASSERT_MESSAGE(func, "Failed to create debug messenger!");
 	VK_CHECK(func(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
 	SDEBUG("Vulkan Debugger created.");
@@ -218,6 +221,8 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 		return false;
 	}
 
+	create_buffers(&context);
+
 	SINFO("Vulkan renderer initialized successfully.");
 
 	return true;
@@ -227,6 +232,10 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 	(void)backend;
 
 	vkDeviceWaitIdle(context.device.logical_device);
+
+	SINFO("Destroying object buffers...");
+	vulkan_buffer_destroy(&context, &context.object_vertex_buffer);
+	vulkan_buffer_destroy(&context, &context.object_index_buffer);
 
 	SINFO("Destroying object shader...");
 	vulkan_object_shader_destroy(&context, &context.object_shader);
@@ -285,9 +294,9 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 #if defined(_DEBUG)
 	SINFO("Destroying Vulkan debugger...");
 	if (context.debug_messenger) {
-		PFN_vkDestroyDebugUtilsMessengerEXT func
-			= (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance,
-																		 "vkDestroyDebugUtilsMessengerEXT");
+		PFN_vkDestroyDebugUtilsMessengerEXT func =
+			(PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance,
+																	   "vkDestroyDebugUtilsMessengerEXT");
 		func(context.instance, context.debug_messenger, context.allocator);
 	}
 #endif
@@ -380,14 +389,16 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 
 	// Scissor
 	VkRect2D scissor = {
-		.offset = {
-			.x = 0,
-			.y = 0,
-		},
-		.extent = {
-			.width  = context.framebuffer_width,
-			.height = context.framebuffer_height,
-		},
+		.offset =
+			{
+				.x = 0,
+				.y = 0,
+			},
+		.extent =
+			{
+				.width  = context.framebuffer_width,
+				.height = context.framebuffer_height,
+			},
 	};
 
 	vkCmdSetViewport(command_buffer->handle, 0, 1, &viewport);
@@ -612,6 +623,38 @@ b8 recreate_swapchain(renderer_backend *backend) {
 	create_command_buffers(backend);
 
 	context.recreating_swapchain = false;
+
+	return true;
+}
+
+b8 create_buffers(vulkan_context *context) {
+	VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	const u64 vertex_buffer_size = MEBIBYTES(1 * sizeof(vertex_3d));
+	if (!vulkan_buffer_create(context,
+							  vertex_buffer_size,
+							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+								  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+							  memory_property_flags,
+							  true,
+							  &context->object_vertex_buffer)) {
+		SERROR("Error creating vertex buffer.");
+		return false;
+	}
+	context->geometry_vertex_offset = 0;
+
+	const u64 index_buffer_size = MEBIBYTES(sizeof(u32));
+	if (!vulkan_buffer_create(context,
+							  index_buffer_size,
+							  VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+								  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+							  memory_property_flags,
+							  true,
+							  &context->object_index_buffer)) {
+		SERROR("Error creating index buffer.");
+		return false;
+	}
+	context->geometry_index_offset = 0;
 
 	return true;
 }
