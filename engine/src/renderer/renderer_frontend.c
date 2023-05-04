@@ -4,6 +4,7 @@
 
 #include "core/logger.h"
 #include "core/smemory.h"
+#include "math/smath.h"
 
 // Backend render context.
 static renderer_backend *backend = 0;
@@ -48,6 +49,11 @@ b8 renderer_draw_frame(render_packet *packet) {
 	// continue.
 	if (renderer_begin_frame(packet->delta_time)) {
 		// TODO: mid-frame operations
+
+		mat4 projection = mat4_perspective(deg_to_rad(90), 16.0f / 9.0f, 0.1f, 1000.0f);
+		mat4 view       = mat4_translation((vec3){.x = 0, .y = 0, .z = -30.0f});
+
+		backend->update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
 
 		// End the frame. If this fails, it is likely unrecoverable.
 		b8 result = renderer_end_frame(packet->delta_time);

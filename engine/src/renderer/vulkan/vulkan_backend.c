@@ -239,20 +239,22 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 	vertex_3d verts[vert_count];
 	szero_memory(verts, sizeof(vertex_3d) * vert_count);
 
-	verts[0].position.x = 0.0f;
-	verts[0].position.y = -0.5f;
+	const f32 f = 10.0f;
+
+	verts[0].position.x = -0.5f * f;
+	verts[0].position.y = -0.5f * f;
 	verts[0].colour     = (vec3){.r = 1.0f, .g = 0.0f, .b = 0.0f};
 
-	verts[1].position.x = 0.5f;
-	verts[1].position.y = 0.5f;
+	verts[1].position.x = 0.5f * f;
+	verts[1].position.y = 0.5f * f;
 	verts[1].colour     = (vec3){.r = 0.0f, .g = 1.0f, .b = 0.0f};
 
-	verts[2].position.x = 0.0f;
-	verts[2].position.y = 0.5f;
+	verts[2].position.x = -0.5f * f;
+	verts[2].position.y = 0.5f * f;
 	verts[2].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
 
-	verts[3].position.x = 0.5f;
-	verts[3].position.y = -0.5f;
+	verts[3].position.x = 0.5f * f;
+	verts[3].position.y = -0.5f * f;
 	verts[3].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
 
 	const u32 index_count = 6;
@@ -471,9 +473,29 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 							 &context.main_render_pass,
 							 context.swapchain.framebuffers[context.image_index].handle);
 
-	// WARN: temporary test code
+	return true;
+}
+
+void vulkan_renderer_update_global_state(mat4 projection,
+										 mat4 view,
+										 vec3 view_position,
+										 vec4 ambient_colour,
+										 i32 mode) {
+	(void)view_position;
+	(void)ambient_colour;
+	(void)mode;
+
+	vulkan_command_buffer *command_buffer = &context.graphics_command_buffers[context.image_index];
 
 	vulkan_object_shader_use(&context, &context.object_shader);
+
+	context.object_shader.global_ubo.projection = projection;
+	context.object_shader.global_ubo.view       = view;
+
+	// TODO: other ubo properties
+
+	vulkan_object_shader_update_global_state(&context, &context.object_shader);
+	// WARN: temporary test code
 
 	VkDeviceSize offsets[1];
 	offsets[0] = 0;
@@ -484,8 +506,6 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 	vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
 
 	// WARN: end temporary test code
-
-	return true;
 }
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
