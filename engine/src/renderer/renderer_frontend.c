@@ -51,9 +51,19 @@ b8 renderer_draw_frame(render_packet *packet) {
 		// TODO: mid-frame operations
 
 		mat4 projection = mat4_perspective(deg_to_rad(90), 16.0f / 9.0f, 0.1f, 1000.0f);
-		mat4 view       = mat4_translation((vec3){.x = 0, .y = 0, .z = -30.0f});
+
+		static f32 z = -1.0f;
+		z -= 0.1f;
+		mat4 view = mat4_translation((vec3){.x = 0, .y = 0, .z = z});
 
 		backend->update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
+
+		static f32 angle = 0.01f;
+		angle += 0.01f;
+		quat rotation = quat_from_axis_angle(vec3_forward(), angle, false);
+		mat4 model    = quat_to_rotation_matrix(rotation, vec3_zero());
+
+		backend->update_object(model);
 
 		// End the frame. If this fails, it is likely unrecoverable.
 		b8 result = renderer_end_frame(packet->delta_time);

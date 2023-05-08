@@ -115,10 +115,19 @@ b8 vulkan_graphics_pipeline_create(vulkan_context *context,
 		.primitiveRestartEnable = VK_FALSE,
 	};
 
+	// Push constants
+	VkPushConstantRange push_constant = {
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.offset     = sizeof(mat4) * 0,
+		.size       = sizeof(mat4) * 2,
+	};
+
 	VkPipelineLayoutCreateInfo pipeline_layout_create_info = {
-		.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = descriptor_set_layout_count,
-		.pSetLayouts    = descriptor_set_layouts,
+		.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount         = descriptor_set_layout_count,
+		.pSetLayouts            = descriptor_set_layouts,
+		.pushConstantRangeCount = 1,
+		.pPushConstantRanges    = &push_constant,
 	};
 
 	VK_CHECK(vkCreatePipelineLayout(context->device.logical_device,

@@ -485,8 +485,6 @@ void vulkan_renderer_update_global_state(mat4 projection,
 	(void)ambient_colour;
 	(void)mode;
 
-	vulkan_command_buffer *command_buffer = &context.graphics_command_buffers[context.image_index];
-
 	vulkan_object_shader_use(&context, &context.object_shader);
 
 	context.object_shader.global_ubo.projection = projection;
@@ -495,17 +493,6 @@ void vulkan_renderer_update_global_state(mat4 projection,
 	// TODO: other ubo properties
 
 	vulkan_object_shader_update_global_state(&context, &context.object_shader);
-	// WARN: temporary test code
-
-	VkDeviceSize offsets[1];
-	offsets[0] = 0;
-	vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, (VkDeviceSize *)offsets);
-
-	vkCmdBindIndexBuffer(command_buffer->handle, context.object_index_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
-
-	// WARN: end temporary test code
 }
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
@@ -574,6 +561,23 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
 							 context.image_index);
 
 	return true;
+}
+
+void vulkan_renderer_update_object(mat4 model) {
+	vulkan_object_shader_update_object(&context, &context.object_shader, model);
+
+	// WARN: temporary test code
+	vulkan_command_buffer *command_buffer = &context.graphics_command_buffers[context.image_index];
+
+	VkDeviceSize offsets[1];
+	offsets[0] = 0;
+	vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, (VkDeviceSize *)offsets);
+
+	vkCmdBindIndexBuffer(command_buffer->handle, context.object_index_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
+
+	// WARN: end temporary test code
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,

@@ -181,17 +181,18 @@ void create(vulkan_context *context, u32 width, u32 height, b8 use_old_swapchain
 	// Views
 	for (u32 i = 0; i < swapchain->image_count; ++i) {
 		VkImageViewCreateInfo view_info = {
-			.sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			.image            = swapchain->images[i],
-			.viewType         = VK_IMAGE_VIEW_TYPE_2D,
-			.format           = swapchain->image_format.format,
-			.subresourceRange = {
-				.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel   = 0,
-				.levelCount     = 1,
-				.baseArrayLayer = 0,
-				.layerCount     = 1,
-			},
+			.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.image    = swapchain->images[i],
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format   = swapchain->image_format.format,
+			.subresourceRange =
+				{
+					.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+					.baseMipLevel   = 0,
+					.levelCount     = 1,
+					.baseArrayLayer = 0,
+					.layerCount     = 1,
+				},
 		};
 
 		VK_CHECK(
