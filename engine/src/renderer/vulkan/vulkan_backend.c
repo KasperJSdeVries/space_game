@@ -50,9 +50,7 @@ void upload_data_range(vulkan_context *context,
 					   u64 size,
 					   void *data);
 
-b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
-									  const char *application_name,
-									  struct platform_state *platform_state) {
+b8 vulkan_renderer_backend_initialize(renderer_backend *backend, const char *application_name) {
 	// Function pointers
 	context.find_memory_index = find_memory_index;
 
@@ -165,7 +163,7 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend,
 #endif
 
 	// Surface creation
-	if (!platform_create_vulkan_surface(platform_state, &context)) {
+	if (!platform_create_vulkan_surface(&context)) {
 		SERROR("Failed to create surface!");
 		return false;
 	}

@@ -22,7 +22,7 @@ static logger_system_state *state_ptr;
 
 void append_to_log_file(const char *message);
 
-b8 logging_initialize(u64 *memory_requirement, void *state) {
+b8 logging_system_initialize(u64 *memory_requirement, void *state) {
 	*memory_requirement = sizeof(logger_system_state);
 	if (state == 0) { return true; }
 

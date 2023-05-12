@@ -22,12 +22,13 @@ typedef enum memory_tag {
 	MEMORY_TAG_ENTITY,
 	MEMORY_TAG_ENTITY_NODE,
 	MEMORY_TAG_SCENE,
+	MEMORY_TAG_LINEAR_ALLOCATOR,
 
 	MEMORY_TAG_MAX_TAGS
 } memory_tag;
 
-void memory_initialize();
-void memory_shutdown();
+void memory_system_initialize(u64 *memory_requirement, void *state);
+void memory_system_shutdown(void *state);
 
 SAPI void *sallocate(u64 size, memory_tag tag);
 
@@ -40,3 +41,5 @@ SAPI void *scopy_memory(void *dest, const void *source, u64 size);
 SAPI void *sset_memory(void *block, i32 value, u64 size);
 
 SAPI char *get_memory_usage_string();
+
+SAPI u64 get_memory_alloc_count();

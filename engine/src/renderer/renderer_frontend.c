@@ -1,4 +1,5 @@
 #include "renderer_frontend.h"
+#include <crtdbg.h>
 
 #include "renderer_backend.h"
 
@@ -6,16 +7,25 @@
 #include "core/smemory.h"
 #include "math/smath.h"
 
-// Backend render context.
-static renderer_backend *backend = 0;
+typedef struct renderer_system_state {
+	renderer_backend backend;
+	mat4 projection;
+} renderer_system_state;
 
-b8 renderer_initialize(const char *application_name, struct platform_state *platform_state) {
-	backend = sallocate(sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+// Backend render context.
+static renderer_system_state *state_ptr = 0;
+
+b8 render_system_initialize(u64 *memory_requirement, void *state, const char *application_name) {
+	*memory_requirement = sizeof(renderer_system_state);
+
+	if (state == 0) { return true; }
+
+	state_ptr = state;
 
 	// TODO: make this configurable.
-	renderer_backend_create(RENDERER_BACKEND_TYPE_VULKAN, platform_state, backend);
+	renderer_backend_create(RENDERER_BACKEND_TYPE_VULKAN, &state_ptr->backend);
 
-	if (!backend->initialize(backend, application_name, platform_state)) {
+	if (!state_ptr->backend.initialize(&state_ptr->backend, application_name)) {
 		SFATAL("Renderer backend failed to initialize. Shutting down.");
 		return false;
 	}
@@ -23,29 +33,35 @@ b8 renderer_initialize(const char *application_name, struct platform_state *plat
 	return true;
 }
 
-void renderer_shutdown() {
-	backend->shutdown(backend);
-	sfree(backend, sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+void renderer_system_shutdown(void *state) {
+	(void)state;
+	if (state_ptr) { state_ptr->backend.shutdown(&state_ptr->backend); }
+	state_ptr = 0;
 }
 
-b8 renderer_begin_frame(f32 delta_time) { return backend->begin_frame(backend, delta_time); }
+b8 renderer_begin_frame(f32 delta_time) {
+	if (!state_ptr) { return false; }
+	return state_ptr->backend.begin_frame(&state_ptr->backend, delta_time);
+}
 
 b8 renderer_end_frame(f32 delta_time) {
-	b8 result = backend->end_frame(backend, delta_time);
-	backend->frame_number++;
+	if (!state_ptr) { return false; }
+
+	b8 result = state_ptr->backend.end_frame(&state_ptr->backend, delta_time);
+	state_ptr->backend.frame_number++;
 	return result;
 }
 
 void renderer_on_resize(u16 width, u16 height) {
-	if (backend) {
-		backend->resize(backend, width, height);
+	if (state_ptr) {
+		state_ptr->backend.resize(&state_ptr->backend, width, height);
 	} else {
 		SWARN("renderer backend does not exist to accept resize: %i, %i", width, height);
 	}
 }
 
 b8 renderer_draw_frame(render_packet *packet) {
-	// If the begin frame returned successfully, mid-frame operations may
+	// If renderer_begin_frame returned successfully, mid-frame operations may
 	// continue.
 	if (renderer_begin_frame(packet->delta_time)) {
 		// TODO: mid-frame operations
@@ -56,14 +72,14 @@ b8 renderer_draw_frame(render_packet *packet) {
 		z -= 0.1f;
 		mat4 view = mat4_translation((vec3){.x = 0, .y = 0, .z = z});
 
-		backend->update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
+		state_ptr->backend.update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
 
 		static f32 angle = 0.01f;
 		angle += 0.01f;
 		quat rotation = quat_from_axis_angle(vec3_forward(), angle, false);
 		mat4 model    = quat_to_rotation_matrix(rotation, vec3_zero());
 
-		backend->update_object(model);
+		state_ptr->backend.update_object(model);
 
 		// End the frame. If this fails, it is likely unrecoverable.
 		b8 result = renderer_end_frame(packet->delta_time);

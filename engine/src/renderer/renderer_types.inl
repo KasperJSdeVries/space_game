@@ -17,12 +17,9 @@ typedef struct global_uniform_object {
 } global_uniform_object;
 
 typedef struct renderer_backend {
-	struct platform_state *platform_state;
 	u64 frame_number;
 
-	b8 (*initialize)(struct renderer_backend *backend,
-					 const char *application_name,
-					 struct platform_state *platform_state);
+	b8 (*initialize)(struct renderer_backend *backend, const char *application_name);
 
 	void (*shutdown)(struct renderer_backend *backend);
 

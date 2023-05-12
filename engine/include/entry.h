@@ -4,16 +4,15 @@
 #include "core/logger.h"
 #include "core/smemory.h"
 #include "game_types.h"
+#include <crtdbg.h>
 
 // Externally-defined function to create a game.
 extern b8 create_game(game *out_game);
 
 // The main entry point of the application.
 int main(void) {
-	memory_initialize();
-
 	// Request the game instance from the application.
-	game game_instance;
+	game game_instance = {};
 	if (!create_game(&game_instance)) {
 		SFATAL("Could not create game!");
 		return -1;
@@ -36,8 +35,6 @@ int main(void) {
 		SINFO("Application did not shutdown gracefully.");
 		return 2;
 	}
-
-	memory_shutdown();
 
 	return 0;
 }

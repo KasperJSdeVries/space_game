@@ -31,23 +31,39 @@ static const char *memory_tag_strings[MEMORY_TAG_MAX_TAGS] = {
 	"TRANSFORM",
 	"ENTITY",
 	"ENTITY_NODE",
+	"LINEAR_ALLOCATOR",
 	"SCENE",
 };
 
-static struct memory_stats stats;
+typedef struct memory_system_state {
+	struct memory_stats stats;
+	u64 alloc_count;
+} memory_system_state;
 
-void memory_initialize() { platform_zero_memory(&stats, sizeof(stats)); }
+static memory_system_state *state_ptr;
 
-void memory_shutdown() {}
+void memory_system_initialize(u64 *memory_requirement, void *state) {
+	*memory_requirement = sizeof(memory_system_state);
+	if (state == 0) return;
+
+	state_ptr              = state;
+	state_ptr->alloc_count = 0;
+	platform_zero_memory(&state_ptr->stats, sizeof(state_ptr->stats));
+}
+
+void memory_system_shutdown(void *state) {
+	(void)state;
+	state_ptr = 0;
+}
 
 void *sallocate(u64 size, memory_tag tag) {
-	if (tag == MEMORY_TAG_UNKNOWN) {
-		SWARN("sallocate called using MEMORY_TAG_UNKNOWN. Re-class this "
-			  "allocation.");
-	}
+	if (tag == MEMORY_TAG_UNKNOWN) { SWARN("sallocate called using MEMORY_TAG_UNKNOWN. Re-class this allocation."); }
 
-	stats.total_allocated += size;
-	stats.tagged_allocations[tag] += size;
+	if (state_ptr) {
+		state_ptr->stats.total_allocated += size;
+		state_ptr->stats.tagged_allocations[tag] += size;
+		state_ptr->alloc_count++;
+	}
 
 	// TODO: Memory alignment
 	void *block = platform_allocate(size, false);
@@ -57,13 +73,12 @@ void *sallocate(u64 size, memory_tag tag) {
 }
 
 void sfree(void *block, u64 size, memory_tag tag) {
-	if (tag == MEMORY_TAG_UNKNOWN) {
-		SWARN("sfree called using MEMORY_TAG_UNKNOWN. Re-class this "
-			  "allocation.");
-	}
+	if (tag == MEMORY_TAG_UNKNOWN) { SWARN("sfree called using MEMORY_TAG_UNKNOWN. Re-class this allocation."); }
 
-	stats.total_allocated -= size;
-	stats.tagged_allocations[tag] -= size;
+	if (state_ptr) {
+		state_ptr->stats.total_allocated -= size;
+		state_ptr->stats.tagged_allocations[tag] -= size;
+	}
 
 	// TODO: Memory alignment
 	platform_free(block, false);
@@ -93,19 +108,19 @@ char *get_memory_usage_string() {
 	for (u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
 		char unit[4] = "XiB";
 		f32 amount   = 1.0f;
-		if (stats.tagged_allocations[i] >= gib) {
+		if (state_ptr->stats.tagged_allocations[i] >= gib) {
 			unit[0] = 'G';
-			amount  = (f32)stats.tagged_allocations[i] / (f32)gib;
-		} else if (stats.tagged_allocations[i] >= mib) {
+			amount  = (f32)state_ptr->stats.tagged_allocations[i] / (f32)gib;
+		} else if (state_ptr->stats.tagged_allocations[i] >= mib) {
 			unit[0] = 'M';
-			amount  = (f32)stats.tagged_allocations[i] / (f32)mib;
-		} else if (stats.tagged_allocations[i] >= kib) {
+			amount  = (f32)state_ptr->stats.tagged_allocations[i] / (f32)mib;
+		} else if (state_ptr->stats.tagged_allocations[i] >= kib) {
 			unit[0] = 'K';
-			amount  = (f32)stats.tagged_allocations[i] / (f32)kib;
+			amount  = (f32)state_ptr->stats.tagged_allocations[i] / (f32)kib;
 		} else {
 			unit[0] = 'B';
 			unit[1] = '\0';
-			amount  = (f32)stats.tagged_allocations[i];
+			amount  = (f32)state_ptr->stats.tagged_allocations[i];
 		}
 
 		i32 length = snprintf(buffer + offset,
@@ -119,4 +134,9 @@ char *get_memory_usage_string() {
 	}
 	char *out_string = string_duplicate(buffer);
 	return out_string;
+}
+
+u64 get_memory_alloc_count() {
+	if (state_ptr) { return state_ptr->alloc_count; }
+	return 0;
 }
