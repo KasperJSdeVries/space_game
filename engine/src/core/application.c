@@ -258,6 +258,7 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance, event_con
 					return true;
 				}
 				default:
+					SDEBUG("'%c' Key pressed", key_code);
 					break;
 			}
 		} break;
@@ -266,6 +267,7 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance, event_con
 			u16 key_code = context.data.u16[0];
 			switch (key_code) {
 				default:
+					SDEBUG("'%c' Key released", key_code);
 					break;
 			}
 		} break;

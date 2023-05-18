@@ -48,6 +48,7 @@ typedef union vec4_u {
 			f32 w, a, q;
 		};
 	};
+	f32 elements[4];
 } vec4;
 
 typedef vec4 quat;
