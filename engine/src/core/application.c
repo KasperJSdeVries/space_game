@@ -257,13 +257,7 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance, event_con
 					// Block anything else from processing this key press.
 					return true;
 				}
-
-				case KEY_A:
-					SDEBUG("Explicit - A key pressed!");
-					break;
-
 				default:
-					SDEBUG("'%c' key pressed in window.", key_code);
 					break;
 			}
 		} break;
@@ -271,12 +265,7 @@ b8 application_on_key(u16 code, void *sender, void *listener_instance, event_con
 		case EVENT_CODE_KEY_RELEASED: {
 			u16 key_code = context.data.u16[0];
 			switch (key_code) {
-				case KEY_B:
-					SDEBUG("Explicit - B key released!");
-					break;
-
 				default:
-					SDEBUG("'%c' key released in window.", key_code);
 					break;
 			}
 		} break;
