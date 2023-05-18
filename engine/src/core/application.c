@@ -1,5 +1,4 @@
 #include "core/application.h"
-#include <crtdbg.h>
 
 #include "core/clock.h"
 #include "core/event.h"

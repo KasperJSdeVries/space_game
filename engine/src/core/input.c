@@ -33,6 +33,8 @@ void input_system_initialize(u64 *memory_requirement, void *state) {
 }
 
 void input_system_shutdown(void *state) {
+	(void)state;
+
 	// TODO: Add shutdown routines when needed.
 	state_ptr = 0;
 }

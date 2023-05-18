@@ -1,5 +1,4 @@
 #include "renderer_frontend.h"
-#include <crtdbg.h>
 
 #include "renderer_backend.h"
 
