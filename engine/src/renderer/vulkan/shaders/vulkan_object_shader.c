@@ -188,32 +188,6 @@ void vulkan_object_shader_update_global_state(vulkan_context *context, struct vu
 	VkCommandBuffer command_buffer    = context->graphics_command_buffers[image_index].handle;
 	VkDescriptorSet global_descriptor = shader->global_descriptor_sets[image_index];
 
-	if (!shader->descriptor_updated[image_index]) {
-		u32 range  = sizeof(global_uniform_object);
-		u64 offset = sizeof(global_uniform_object) * image_index;
-
-		vulkan_buffer_load_data(context, &shader->global_uniform_buffer, offset, range, 0, &shader->global_ubo);
-
-		VkDescriptorBufferInfo buffer_info = {
-			.buffer = shader->global_uniform_buffer.handle,
-			.offset = offset,
-			.range  = range,
-		};
-
-		VkWriteDescriptorSet descriptor_write = {
-			.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet          = shader->global_descriptor_sets[image_index],
-			.dstBinding      = 0,
-			.dstArrayElement = 0,
-			.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.descriptorCount = 1,
-			.pBufferInfo     = &buffer_info,
-		};
-
-		vkUpdateDescriptorSets(context->device.logical_device, 1, &descriptor_write, 0, 0);
-		shader->descriptor_updated[image_index] = true;
-	}
-
 	vkCmdBindDescriptorSets(command_buffer,
 							VK_PIPELINE_BIND_POINT_GRAPHICS,
 							shader->pipeline.pipeline_layout,
@@ -222,6 +196,29 @@ void vulkan_object_shader_update_global_state(vulkan_context *context, struct vu
 							&global_descriptor,
 							0,
 							0);
+
+	u32 range  = sizeof(global_uniform_object);
+	u64 offset = sizeof(global_uniform_object) * image_index;
+
+	vulkan_buffer_load_data(context, &shader->global_uniform_buffer, offset, range, 0, &shader->global_ubo);
+
+	VkDescriptorBufferInfo buffer_info = {
+		.buffer = shader->global_uniform_buffer.handle,
+		.offset = offset,
+		.range  = range,
+	};
+
+	VkWriteDescriptorSet descriptor_write = {
+		.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet          = shader->global_descriptor_sets[image_index],
+		.dstBinding      = 0,
+		.dstArrayElement = 0,
+		.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorCount = 1,
+		.pBufferInfo     = &buffer_info,
+	};
+
+	vkUpdateDescriptorSets(context->device.logical_device, 1, &descriptor_write, 0, 0);
 }
 
 void vulkan_object_shader_update_object(vulkan_context *context, struct vulkan_object_shader *shader, mat4 model) {

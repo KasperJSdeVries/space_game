@@ -565,6 +565,8 @@ void vulkan_renderer_update_object(mat4 model) {
 	vulkan_object_shader_update_object(&context, &context.object_shader, model);
 
 	// WARN: temporary test code
+	vulkan_object_shader_use(&context, &context.object_shader);
+
 	vulkan_command_buffer *command_buffer = &context.graphics_command_buffers[context.image_index];
 
 	VkDeviceSize offsets[1];

@@ -78,7 +78,7 @@ b8 renderer_draw_frame(render_packet *packet) {
 		state_ptr->backend.update_global_state(state_ptr->projection, state_ptr->view, vec3_zero(), vec4_one(), 0);
 
 		static f32 angle = 0.01f;
-		angle += 0.01f;
+		angle += 1.0f * packet->delta_time;
 		quat rotation = quat_from_axis_angle(vec3_forward(), angle, false);
 		mat4 model    = quat_to_rotation_matrix(rotation, vec3_zero());
 
