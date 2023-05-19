@@ -2,6 +2,7 @@
 
 #include "defines.h"
 #include "math/math_types.inl"
+#include "resources/resource_types.h"
 
 typedef enum renderer_backend_type {
 	RENDERER_BACKEND_TYPE_VULKAN,
@@ -30,6 +31,16 @@ typedef struct renderer_backend {
 	b8 (*end_frame)(struct renderer_backend *backend, f32 delta_time);
 
 	void (*update_object)(mat4 model);
+
+	void (*create_texture)(const char *name,
+						   b8 auto_release,
+						   u32 width,
+						   u32 height,
+						   i32 channel_count,
+						   const u8 *pixels,
+						   b8 has_transparency,
+						   texture *out_texture);
+	void (*destroy_texture)(texture *texture);
 } renderer_backend;
 
 typedef struct render_packet {

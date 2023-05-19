@@ -3,6 +3,7 @@
 #include "vulkan_device.h"
 
 #include "core/logger.h"
+#include <vulkan/vulkan_core.h>
 
 void vulkan_image_create(vulkan_context *context,
 						 VkImageType image_type,
@@ -24,11 +25,12 @@ void vulkan_image_create(vulkan_context *context,
 	VkImageCreateInfo image_create_info = {
 		.sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.imageType = VK_IMAGE_TYPE_2D,
-		.extent    = {
-			   .width  = width,
-			   .height = height,
-			   .depth  = 1, // TODO: Make configurable
-        },
+		.extent =
+			{
+				.width  = width,
+				.height = height,
+				.depth  = 1, // TODO: Make configurable
+			},
 		.mipLevels     = 4, // TODO: Support mip-mapping
 		.arrayLayers   = 1, // TODO: Support image layers
 		.format        = format,
@@ -77,22 +79,118 @@ void vulkan_image_view_create(vulkan_context *context,
 							  vulkan_image *image,
 							  VkImageAspectFlags aspect_flags) {
 	VkImageViewCreateInfo view_create_info = {
-		.sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-		.image            = image->handle,
-		.viewType         = VK_IMAGE_VIEW_TYPE_2D, // TODO: Make configurable.
-		.format           = format,
-		.subresourceRange = {
-			.aspectMask = aspect_flags,
+		.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		.image    = image->handle,
+		.viewType = VK_IMAGE_VIEW_TYPE_2D, // TODO: Make configurable.
+		.format   = format,
+		.subresourceRange =
+			{
+				.aspectMask = aspect_flags,
 
-			// TODO: Make configurable.
-			.baseMipLevel   = 0,
-			.levelCount     = 1,
-			.baseArrayLayer = 0,
-			.layerCount     = 1,
-		},
+				// TODO: Make configurable.
+				.baseMipLevel   = 0,
+				.levelCount     = 1,
+				.baseArrayLayer = 0,
+				.layerCount     = 1,
+			},
 	};
 
 	VK_CHECK(vkCreateImageView(context->device.logical_device, &view_create_info, context->allocator, &image->view));
+}
+
+void vulkan_image_transition_layout(vulkan_context *context,
+									vulkan_command_buffer *command_buffer,
+									vulkan_image *image,
+									VkFormat format,
+									VkImageLayout old_layout,
+									VkImageLayout new_layout) {
+	(void)format;
+
+	VkImageMemoryBarrier barrier = {
+		.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.oldLayout           = old_layout,
+		.newLayout           = new_layout,
+		.srcQueueFamilyIndex = context->device.graphics_queue_index,
+		.dstQueueFamilyIndex = context->device.graphics_queue_index,
+		.image               = image->handle,
+		.subresourceRange =
+			{
+				.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel   = 0,
+				.levelCount     = 1,
+				.baseArrayLayer = 0,
+				.layerCount     = 1,
+			},
+	};
+
+	VkPipelineStageFlags source_stage;
+	VkPipelineStageFlags dest_stage;
+
+	if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+		dest_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	} else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+			   && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+		dest_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	} else {
+		SFATAL("Unsupported layout transition!");
+		return;
+	}
+
+	vkCmdPipelineBarrier(command_buffer->handle,
+						 source_stage,
+						 dest_stage,
+						 0,
+						 0,
+						 VK_NULL_HANDLE,
+						 0,
+						 VK_NULL_HANDLE,
+						 1,
+						 &barrier);
+}
+
+void vulkan_image_copy_from_buffer(vulkan_context *context,
+								   vulkan_image *image,
+								   VkBuffer buffer,
+								   vulkan_command_buffer *command_buffer) {
+	(void)context;
+
+	VkBufferImageCopy region = {
+		.bufferOffset      = 0,
+		.bufferRowLength   = 0,
+		.bufferImageHeight = 0,
+
+		.imageSubresource =
+			{
+				.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+				.mipLevel       = 0,
+				.baseArrayLayer = 0,
+				.layerCount     = 1,
+			},
+
+		.imageExtent =
+			{
+				.width  = image->width,
+				.height = image->height,
+				.depth  = 1,
+			},
+	};
+
+	vkCmdCopyBufferToImage(command_buffer->handle,
+						   buffer,
+						   image->handle,
+						   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+						   1,
+						   &region);
 }
 
 void vulkan_image_destroy(vulkan_context *context, vulkan_image *image) {

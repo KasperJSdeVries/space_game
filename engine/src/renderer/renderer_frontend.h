@@ -13,3 +13,13 @@ void renderer_on_resize(u16 width, u16 height);
 b8 renderer_draw_frame(render_packet *packet);
 
 void renderer_set_view(mat4 view);
+
+void renderer_create_texture(const char *name,
+							 b8 auto_release,
+							 u32 width,
+							 u32 height,
+							 i32 channel_count,
+							 const u8 *pixels,
+							 b8 has_transparency,
+							 texture *out_texture);
+void renderer_destroy_texture(texture *texture);
