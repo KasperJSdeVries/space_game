@@ -4,6 +4,8 @@
 #include "math/math_types.inl"
 #include "resources/resource_types.h"
 
+#define TEXTURES_PER_GEOMETRY 16
+
 typedef enum renderer_backend_type {
 	RENDERER_BACKEND_TYPE_VULKAN,
 	RENDERER_BACKEND_TYPE_OPENGL,
@@ -16,6 +18,19 @@ typedef struct global_uniform_object {
 	mat4 m_reserved0;
 	mat4 m_reserved1;
 } global_uniform_object;
+
+typedef struct object_uniform_object {
+	vec4 diffuse_color;
+	vec4 m_reserved0;
+	vec4 m_reserved1;
+	vec4 m_reserved2;
+} object_uniform_object;
+
+typedef struct geometry_render_data {
+	u32 object_id;
+	mat4 model;
+	texture *textures[TEXTURES_PER_GEOMETRY];
+} geometry_render_data;
 
 typedef struct renderer_backend {
 	u64 frame_number;
@@ -30,7 +45,7 @@ typedef struct renderer_backend {
 	void (*update_global_state)(mat4 projection, mat4 view, vec3 view_position, vec4 ambient_colour, i32 mode);
 	b8 (*end_frame)(struct renderer_backend *backend, f32 delta_time);
 
-	void (*update_object)(mat4 model);
+	void (*update_object)(geometry_render_data data);
 
 	void (*create_texture)(const char *name,
 						   b8 auto_release,

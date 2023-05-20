@@ -1,5 +1,6 @@
 #include "vulkan_backend.h"
 
+#include "defines.h"
 #include "vulkan_buffer.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_device.h"
@@ -240,21 +241,25 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend, const char *app
 
 	const f32 f = 10.0f;
 
-	verts[0].position.x = -0.5f * f;
-	verts[0].position.y = -0.5f * f;
-	verts[0].colour     = (vec3){.r = 1.0f, .g = 0.0f, .b = 0.0f};
+	verts[0].position.x           = -0.5f * f;
+	verts[0].position.y           = -0.5f * f;
+	verts[0].texture_coordinate.x = 0.0f;
+	verts[0].texture_coordinate.y = 0.0f;
 
-	verts[1].position.x = 0.5f * f;
-	verts[1].position.y = 0.5f * f;
-	verts[1].colour     = (vec3){.r = 0.0f, .g = 1.0f, .b = 0.0f};
+	verts[1].position.x           = 0.5f * f;
+	verts[1].position.y           = 0.5f * f;
+	verts[1].texture_coordinate.x = 1.0f;
+	verts[1].texture_coordinate.y = 1.0f;
 
-	verts[2].position.x = -0.5f * f;
-	verts[2].position.y = 0.5f * f;
-	verts[2].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
+	verts[2].position.x           = -0.5f * f;
+	verts[2].position.y           = 0.5f * f;
+	verts[2].texture_coordinate.x = 0.0f;
+	verts[2].texture_coordinate.y = 1.0f;
 
-	verts[3].position.x = 0.5f * f;
-	verts[3].position.y = -0.5f * f;
-	verts[3].colour     = (vec3){.r = 0.0f, .g = 0.0f, .b = 1.0f};
+	verts[3].position.x           = 0.5f * f;
+	verts[3].position.y           = -0.5f * f;
+	verts[3].texture_coordinate.x = 1.0f;
+	verts[3].texture_coordinate.y = 0.0f;
 
 	const u32 index_count = 6;
 	u32 indices[index_count];
@@ -281,6 +286,12 @@ b8 vulkan_renderer_backend_initialize(renderer_backend *backend, const char *app
 					  0,
 					  sizeof(u32) * index_count,
 					  indices);
+
+	u32 object_id = 0;
+	if (!vulkan_object_shader_acquire_resources(&context, &context.object_shader, &object_id)) {
+		SERROR("Failed to acquire shader resources.");
+		return false;
+	}
 
 	SDEBUG("Uploaded vertex data.");
 
@@ -380,9 +391,8 @@ void vulkan_renderer_backend_on_resize(renderer_backend *backend, u16 width, u16
 }
 
 b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time) {
-	(void)delta_time;
-
-	vulkan_device *device = &context.device;
+	context.frame_delta_time = delta_time;
+	vulkan_device *device    = &context.device;
 
 	// check if recreating swap chain and boot out.
 	if (context.recreating_swapchain) {
@@ -491,7 +501,7 @@ void vulkan_renderer_update_global_state(mat4 projection,
 
 	// TODO: other ubo properties
 
-	vulkan_object_shader_update_global_state(&context, &context.object_shader);
+	vulkan_object_shader_update_global_state(&context, &context.object_shader, context.frame_delta_time);
 }
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
@@ -562,8 +572,8 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
 	return true;
 }
 
-void vulkan_renderer_update_object(mat4 model) {
-	vulkan_object_shader_update_object(&context, &context.object_shader, model);
+void vulkan_renderer_update_object(geometry_render_data data) {
+	vulkan_object_shader_update_object(&context, &context.object_shader, data);
 
 	// WARN: temporary test code
 	vulkan_object_shader_use(&context, &context.object_shader);
@@ -788,11 +798,10 @@ void vulkan_renderer_create_texture(const char *name,
 	(void)name;
 	(void)auto_release;
 
-	out_texture->width            = width;
-	out_texture->height           = height;
-	out_texture->channel_count    = (u8)channel_count;
-	out_texture->has_transparency = has_transparency;
-	out_texture->generation       = 0;
+	out_texture->width         = width;
+	out_texture->height        = height;
+	out_texture->channel_count = (u8)channel_count;
+	out_texture->generation    = INVALID_ID;
 
 	out_texture->internal_data = sallocate(sizeof(vulkan_texture_data), MEMORY_TAG_TEXTURE);
 	vulkan_texture_data *data  = out_texture->internal_data;
@@ -807,6 +816,7 @@ void vulkan_renderer_create_texture(const char *name,
 	vulkan_buffer_create(&context, image_size, buffer_usage, memory_property_flags, true, &staging_buffer);
 
 	vulkan_buffer_load_data(&context, &staging_buffer, 0, image_size, 0, pixels);
+
 	vulkan_image_create(&context,
 						VK_IMAGE_TYPE_2D,
 						width,
@@ -832,6 +842,8 @@ void vulkan_renderer_create_texture(const char *name,
 								   VK_IMAGE_LAYOUT_UNDEFINED,
 								   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
+	vulkan_image_copy_from_buffer(&context, &data->image, staging_buffer.handle, &temp_buffer);
+
 	vulkan_image_transition_layout(&context,
 								   &temp_buffer,
 								   &data->image,
@@ -840,6 +852,8 @@ void vulkan_renderer_create_texture(const char *name,
 								   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	vulkan_command_buffer_end_single_use(&context, pool, &temp_buffer, queue);
+
+	vulkan_buffer_destroy(&context, &staging_buffer);
 
 	VkSamplerCreateInfo sampler_info = {
 		.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -867,10 +881,13 @@ void vulkan_renderer_create_texture(const char *name,
 		return;
 	}
 
+	out_texture->has_transparency = has_transparency;
 	out_texture->generation++;
 }
 
 void vulkan_renderer_destroy_texture(texture *texture) {
+	vkDeviceWaitIdle(context.device.logical_device);
+
 	vulkan_texture_data *data = texture->internal_data;
 
 	vulkan_image_destroy(&context, &data->image);

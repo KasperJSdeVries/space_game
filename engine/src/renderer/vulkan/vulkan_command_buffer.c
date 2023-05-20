@@ -7,7 +7,6 @@ void vulkan_command_buffer_allocate(vulkan_context *context,
 									b8 is_primary,
 									vulkan_command_buffer *out_command_buffer) {
 	szero_memory(out_command_buffer, sizeof(vulkan_command_buffer));
-	out_command_buffer->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
 
 	VkCommandBufferAllocateInfo allocate_info = {
 		.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -16,8 +15,10 @@ void vulkan_command_buffer_allocate(vulkan_context *context,
 		.commandBufferCount = 1,
 		.pNext              = 0,
 	};
+	out_command_buffer->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
 
 	VK_CHECK(vkAllocateCommandBuffers(context->device.logical_device, &allocate_info, &out_command_buffer->handle));
+
 	out_command_buffer->state = COMMAND_BUFFER_STATE_READY;
 }
 
